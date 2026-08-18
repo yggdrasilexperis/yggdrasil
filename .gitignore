@@ -28,6 +28,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Rider
+*.idea/
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
@@ -55,3 +58,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Node
+node_modules/
+dist/
+.vite/
