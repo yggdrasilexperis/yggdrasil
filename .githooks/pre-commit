@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+#
+# Formats staged files before committing, so CI's Formatting job never fails on
+# something a tool could have fixed. Enable it once per clone with:
+#
+#   git config core.hooksPath .githooks
+#
+# Skip it for a single commit with `git commit --no-verify`.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+# Files staged for this commit, by type. --diff-filter=ACMR skips deletions.
+mapfile -t staged_cs < <(git diff --cached --name-only --diff-filter=ACMR -- '*.cs')
+mapfile -t staged_fe < <(git diff --cached --name-only --diff-filter=ACMR -- 'frontend/*')
+
+if [ ${#staged_cs[@]} -eq 0 ] && [ ${#staged_fe[@]} -eq 0 ]; then
+        exit 0
+fi
+
+# A partially staged file (git add -p) would have its unstaged edits swept into
+# the commit when we re-add it after formatting. Refuse rather than surprise you.
+mapfile -t unstaged < <(git diff --name-only)
+for f in "${staged_cs[@]}" "${staged_fe[@]}"; do
+        for u in "${unstaged[@]}"; do
+                if [ "$f" = "$u" ]; then
+                        echo "pre-commit: '$f' is only partially staged."
+                        echo "  Formatting it would pull your unstaged changes into this commit."
+                        echo "  Stage the whole file, or commit with --no-verify and format by hand."
+                        exit 1
+                fi
+        done
+done
+
+if [ ${#staged_cs[@]} -gt 0 ]; then
+        echo "pre-commit: dotnet format (${#staged_cs[@]} file(s), this takes a few seconds)…"
+        dotnet format backend/Yggdrasil.sln --include "${staged_cs[@]}"
+        git add -- "${staged_cs[@]}"
+fi
+
+if [ ${#staged_fe[@]} -gt 0 ]; then
+        echo "pre-commit: prettier (${#staged_fe[@]} file(s))…"
+        # prettier resolves paths against its working directory, so run it inside frontend/
+        rel=("${staged_fe[@]#frontend/}")
+        (cd frontend && npx --no -- prettier --write --ignore-unknown "${rel[@]}" >/dev/null)
+        git add -- "${staged_fe[@]}"
+fi
+
+echo "pre-commit: formatted and re-staged."
