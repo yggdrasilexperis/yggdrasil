@@ -69,9 +69,9 @@ dotnet watch --project backend/Yggdrasil.Api
 npm --prefix frontend run dev
 ```
 
-API lives at <http://localhost:5172>
-OpenAPI documents live at <http://localhost:5172/openapi/v1.json>
-Frontend lives at: <http://localhost:5173>
+- API lives at <http://localhost:5172>
+- OpenAPI documents live at <http://localhost:5172/openapi/v1.json>
+- Frontend lives at: <http://localhost:5173>
 
 `backend/Yggdrasil.Api/Yggdrasil.Api.http` has ready requests you can run without needing frontend
 
@@ -92,19 +92,8 @@ dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-p
 ```
 
 Stop the db with `docker compose down`. This DOES keep your data.
-Destry the volume with `docker compose down -v`. This DOES NOT keep your data.
 
-## Where things live
-
-```
-backend/     the API — see backend/README.md for the layer map
-frontend/    React app
-docs/        project plan and worked examples
-```
-
-`backend/README.md` explains what belongs in each project, and each project has
-its own `README.md`. `CONTRIBUTING.md` covers branching, naming and how we
-review.
+Destroy the volume with `docker compose down -v`. This DOES NOT keep your data.
 
 ## Troubleshooting
 
