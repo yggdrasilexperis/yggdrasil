@@ -36,8 +36,7 @@ jobs:
       - name: Check C# formatting
         run: >
           dotnet format backend/Yggdrasil.sln 
-          --verify-no-changes 
-          --exclude backend/Yggdrasil.Infrastructure/Migrations
+          --verify-no-changes
 
       - name: Install frontend dependencies
         run: npm ci
