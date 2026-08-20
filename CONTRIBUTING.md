@@ -1,5 +1,8 @@
 # Contributing
 
+Getting a fresh clone running is in [README.md](README.md). This file is about
+how we work once it is.
+
 ## Where code goes
 
 ```
