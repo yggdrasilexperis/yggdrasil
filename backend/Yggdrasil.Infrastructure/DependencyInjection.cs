@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Yggdrasil.Infrastructure.Persistene;
+using Yggdrasil.Infrastructure.Persistence;
 
 namespace Yggdrasil.Infrastructure;
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Yggdrasil.Infrastructure.Identity;
 
-namespace Yggdrasil.Infrastructure.Persistene;
+namespace Yggdrasil.Infrastructure.Persistence;
 
 public sealed class YggdrasilDbContext(DbContextOptions<YggdrasilDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
