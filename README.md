@@ -10,7 +10,7 @@ An app to create and view quizzes
 
 ## First-time setup
 
-1.
+**0. Clone the repo**
 
 ```bash
 git clone git@github.com:yggdrasilexperis/yggdrasil.git
