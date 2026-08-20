@@ -43,7 +43,7 @@ HTTP through the single typed API client, never `fetch` in a component.
 Use `.editorconfig` for formatting.
 
 ```bash
-dotnet format backend/Yggdrasil.sln
+dotnet format backend/Yggdrasil.sln --exclude backend/Yggdrasil.Infrastructure/Migrations
 npm --prefix frontend run lint
 ```
 
