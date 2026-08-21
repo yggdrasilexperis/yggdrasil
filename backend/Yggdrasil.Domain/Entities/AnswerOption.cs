@@ -6,7 +6,7 @@ public sealed class AnswerOption
     public Guid QuestionId { get; set; }
     public string Text { get; set; } = string.Empty;
     public bool IsCorrect { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
     public Question Question { get; set; } = null!;
 }

@@ -9,8 +9,8 @@ public sealed class Quiz
     public string? Description { get; set; }
     public Difficulty Difficulty { get; set; }
     public Guid OwnerId { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset UpdatedAt { get; set; }
 
     public ICollection<Question> Questions { get; set; } = new List<Question>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();

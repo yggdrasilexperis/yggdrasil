@@ -5,7 +5,7 @@ public sealed class Question
     public Guid Id { get; set; }
     public Guid QuizId { get; set; }
     public string Text { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
     public Quiz Quiz { get; set; } = null!;
     public ICollection<AnswerOption> AnswerOptions { get; set; } = new List<AnswerOption>();
