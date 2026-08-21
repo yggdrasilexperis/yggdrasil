@@ -11,6 +11,6 @@ public sealed class AnswerOptionConfiguration : IEntityTypeConfiguration<AnswerO
     {
         builder.Property(a => a.Text).IsRequired().HasMaxLength(500);
         builder.Property(a => a.IsCorrect).IsRequired();
-        builder.Property(a => a.CreatedAt).IsRequired();
+        builder.Property(a => a.CreatedAt).IsRequired().HasColumnType("timestamp with time zone"); ;
     }
 }

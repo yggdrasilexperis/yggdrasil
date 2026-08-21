@@ -14,8 +14,8 @@ public sealed class QuizConfiguration : IEntityTypeConfiguration<Quiz>
         builder.Property(q => q.Description).HasMaxLength(2000);
         builder.Property(q => q.Difficulty).IsRequired();
         builder.Property(q => q.OwnerId).IsRequired();
-        builder.Property(q => q.CreatedAt).IsRequired();
-        builder.Property(q => q.UpdatedAt).IsRequired();
+        builder.Property(q => q.CreatedAt).IsRequired().HasColumnType("timestamp with time zone");
+        builder.Property(q => q.UpdatedAt).HasColumnType("timestamp with time zone"); ;
 
         builder.HasOne<ApplicationUser>()
             .WithMany()
@@ -34,6 +34,20 @@ public sealed class QuizConfiguration : IEntityTypeConfiguration<Quiz>
 
         builder.HasMany(q => q.Categories)
             .WithMany(c => c.Quizzes)
-            .UsingEntity(j => j.ToTable("QuizCategories"));
+            .UsingEntity<Dictionary<string, object>>(
+                "QuizCategory",
+                j => j.HasOne<Category>()
+                    .WithMany()
+                    .HasForeignKey("CategoryId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<Quiz>()
+                    .WithMany()
+                    .HasForeignKey("QuizId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.ToTable("QuizCategories");
+                    j.HasKey("QuizId", "CategoryId");
+                });
     }
 }

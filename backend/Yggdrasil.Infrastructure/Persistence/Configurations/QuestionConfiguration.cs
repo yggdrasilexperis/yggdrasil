@@ -10,7 +10,7 @@ public sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
     public void Configure(EntityTypeBuilder<Question> builder)
     {
         builder.Property(q => q.Text).IsRequired().HasMaxLength(1000);
-        builder.Property(q => q.CreatedAt).IsRequired();
+        builder.Property(q => q.CreatedAt).IsRequired().HasColumnType("timestamp with time zone"); ;
 
         builder.HasMany(q => q.AnswerOptions)
             .WithOne(a => a.Question)
