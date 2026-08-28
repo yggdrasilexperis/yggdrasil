@@ -1,5 +1,8 @@
+using FluentValidation;
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+
 using Yggdrasil.Application.Exceptions;
 
 namespace Yggdrasil.Api.Handlers;
@@ -27,6 +30,11 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 "Invalid request",
                 "The request could not be read. Verify it's valid JSON"
             ),
+            ValidationException => (
+                StatusCodes.Status400BadRequest,
+                "Validation failed",
+                "one or more fields are invalid"
+            ),
             ForbiddenException ex => (StatusCodes.Status403Forbidden, ex.Title, ex.Message),
             NotFoundException ex => (StatusCodes.Status404NotFound, ex.Title, ex.Message),
             ConflictException ex => (StatusCodes.Status409Conflict, ex.Title, ex.Message),
@@ -44,9 +52,16 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         {
             Status = statusCode,
             Title = title,
-            Detail = exception.Message,
+            Detail = detail,
             Instance = httpContext.Request.Path,
         };
+
+        if (exception is ValidationException validation)
+        {
+            problemDetails.Extensions["errors"] = validation
+                .Errors.GroupBy(e => e.PropertyName)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+        }
 
         httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
