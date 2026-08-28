@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
+using Yggdrasil.Domain.Entities;
 using Yggdrasil.Infrastructure.Identity;
 
 namespace Yggdrasil.Infrastructure.Persistence;
@@ -9,6 +10,12 @@ namespace Yggdrasil.Infrastructure.Persistence;
 public sealed class YggdrasilDbContext(DbContextOptions<YggdrasilDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<Quiz> Quizzes => Set<Quiz>();
+    public DbSet<Question> Questions => Set<Question>();
+    public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Comment> Comments => Set<Comment>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // this needs to be first since it creates the AspNet* tables
