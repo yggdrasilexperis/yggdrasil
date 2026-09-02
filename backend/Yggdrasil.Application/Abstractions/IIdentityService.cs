@@ -8,7 +8,7 @@ public interface IIdentityService
         string email, CancellationToken cancellationToken);
 
     Task<CreateUserResult> CreateUserAsync(
-        string email, string userName, string password, CancellationToken cancellationToken);
+        RegisterRequest registerRequest, CancellationToken cancellationToken);
 
     Task<bool> CheckPasswordAsync(Guid userId, string password, CancellationToken cancellationToken);
 }
