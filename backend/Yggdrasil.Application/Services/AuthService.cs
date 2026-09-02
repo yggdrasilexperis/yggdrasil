@@ -47,7 +47,7 @@ public class AuthService(
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
     {
         var user = await identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user is null || await identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken))
+        if (user is null || !await identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken))
         {
             logger.LogWarning("Login failed.");
             throw new UnauthorizedException("invalid_credentials", "Invalid email or password.");
