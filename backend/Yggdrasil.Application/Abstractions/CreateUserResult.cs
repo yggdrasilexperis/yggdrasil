@@ -8,4 +8,8 @@ namespace Yggdrasil.Application.Abstractions;
 public sealed record CreateUserResult(
     bool Success,
     UserResponse? User,
-    IReadOnlyList<string> Errors);
+    IReadOnlyList<CreateUserResult.Error> Errors
+)
+{
+    public sealed record Error(string Code, string Description);
+}
