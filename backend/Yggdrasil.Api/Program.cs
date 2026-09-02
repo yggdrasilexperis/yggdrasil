@@ -1,6 +1,6 @@
-using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Api.Handlers;
 using Yggdrasil.Application;
+using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
