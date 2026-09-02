@@ -47,7 +47,19 @@ dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;D
 dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
-**6. Install frontend dependencies.**
+**6. Configure the JWT issuer signing key.** The API signs every token it issues
+with this key and refuses to start without one. It is per-developer. Generate
+your own, never commit or share it.
+
+> [!IMPORTANT]
+> **Prerequisite:** `openssl`
+>> Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
+
+```bash
+dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
+```
+
+**7. Install frontend dependencies.**
 
 ```bash
 npm --prefix frontend install
