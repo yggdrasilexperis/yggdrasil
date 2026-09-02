@@ -11,7 +11,7 @@ public static class AuthenticationExtensions
 {
     private const int MinimumKeyBytes = 32; // hmac-sha256 floor
 
-    private static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration configuration)
     {
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
             ?? throw new InvalidOperationException($"The '{JwtOptions.SectionName}' configuration section is missing.");
