@@ -47,7 +47,15 @@ dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;D
 dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
-**6. Install frontend dependencies.**
+**6. Seed database.**
+
+```
+dotnet run --project backend/Yggdrasil.Api -- --seed
+```
+
+The test users all share the same password:
+
+**7. Install frontend dependencies.**
 
 ```bash
 npm --prefix frontend install

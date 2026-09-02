@@ -1,3 +1,4 @@
+using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+if (args.Contains("--seed"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>().SeedAsync();
+    return;
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
