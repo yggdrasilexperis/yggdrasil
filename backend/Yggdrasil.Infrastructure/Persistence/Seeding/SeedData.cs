@@ -18,6 +18,7 @@ internal static class SeedData
     public static readonly Guid MusicId = new("0a1b7f2c-0000-4000-8000-000000000102");
     public static readonly Guid GamesId = new("0a1b7f2c-0000-4000-8000-000000000103");
     public static readonly Guid SportsId = new("0a1b7f2c-0000-4000-8000-000000000104");
+    public static readonly Guid PopCultureId = new("0a1b7f2c-0000-4000-8000-000000000105");
 
     public static IReadOnlyList<Category> Categories() =>
     [
@@ -25,19 +26,20 @@ internal static class SeedData
         new() { Id = MusicId,   Name = "Music",    Slug = "music",    CreatedAt = At },
         new() { Id = GamesId,   Name = "Games",    Slug = "games",    CreatedAt = At },
         new() { Id = SportsId,  Name = "Sports",   Slug = "sports",   CreatedAt = At },
+        new() { Id = PopCultureId, Name = "Pop Culture", Slug = "pop-culture", CreatedAt = At },
     ];
 
     public static IEnumerable<Quiz> Quizzes(IReadOnlyList<Category> categories)
     {
         Category Of(Guid id) => categories.Single(c => c.Id == id);
 
-        yield return GameOfThrones(Of(TvShowsId));
-        yield return Rap(Of(MusicId));
+        yield return GameOfThrones(Of(TvShowsId), Of(PopCultureId));
+        yield return Rap(Of(MusicId), Of(PopCultureId));
         yield return FirstPersonShooters(Of(GamesId));
         yield return ChampionsLeague2025(Of(SportsId));
     }
 
-    private static Quiz GameOfThrones(Category category) =>
+    private static Quiz GameOfThrones(params Category[] categories) =>
         new()
         {
             Id = new("0a1b7f2c-0000-4000-8000-000000000201"),
@@ -49,7 +51,7 @@ internal static class SeedData
             OwnerId = AlvaId,
             CreatedAt = At,
             UpdatedAt = At,
-            Categories = [category],
+            Categories = categories,
             Questions =
             [
                 Q("000000000311", "What are the words of House Stark?",
@@ -76,7 +78,7 @@ internal static class SeedData
         };
 
 
-    private static Quiz Rap(Category category) =>
+    private static Quiz Rap(params Category[] categories) =>
         new()
         {
             Id = new("0a1b7f2c-0000-4000-8000-000000000202"),
@@ -88,7 +90,7 @@ internal static class SeedData
             OwnerId = AlvaId,
             CreatedAt = At.AddDays(3),
             UpdatedAt = At.AddDays(3),
-            Categories = [category],
+            Categories = categories,
             Questions =
             [
                 Q("000000000321", "Which 1994 debut album was Nas's first release?",
@@ -115,7 +117,7 @@ internal static class SeedData
         };
 
 
-    private static Quiz FirstPersonShooters(Category category) =>
+    private static Quiz FirstPersonShooters(params Category[] categories) =>
         new()
         {
             Id = new("0a1b7f2c-0000-4000-8000-000000000203"),
@@ -127,7 +129,7 @@ internal static class SeedData
             OwnerId = JonasId,
             CreatedAt = At.AddDays(6),
             UpdatedAt = At.AddDays(6),
-            Categories = [category],
+            Categories = categories,
             Questions =
             [
                 Q("000000000331", "Which studio released Doom in 1993?",
@@ -153,7 +155,7 @@ internal static class SeedData
             ],
         };
 
-    private static Quiz ChampionsLeague2025(Category category) =>
+    private static Quiz ChampionsLeague2025(params Category[] categories) =>
         new()
         {
             Id = new("0a1b7f2c-0000-4000-8000-000000000204"),
@@ -165,7 +167,7 @@ internal static class SeedData
             OwnerId = JonasId,
             CreatedAt = At.AddDays(9),
             UpdatedAt = At.AddDays(9),
-            Categories = [category],
+            Categories = categories,
             Questions =
             [
                 Q("000000000341", "Which club won the 2024–25 UEFA Champions League?",
