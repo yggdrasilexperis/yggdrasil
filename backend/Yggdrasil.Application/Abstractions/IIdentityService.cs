@@ -1,4 +1,5 @@
-﻿using Yggdrasil.Application.Contracts.Authentication;
+﻿using Yggdrasil.Application.Contracts;
+using Yggdrasil.Application.Contracts.Authentication;
 
 namespace Yggdrasil.Application.Abstractions;
 

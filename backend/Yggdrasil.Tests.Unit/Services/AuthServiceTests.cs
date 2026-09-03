@@ -7,6 +7,7 @@ using NSubstitute;
 using Shouldly;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Authentication;
 using Yggdrasil.Application.Exceptions;
 using Yggdrasil.Application.Services;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Authentication;
 
 namespace Yggdrasil.Infrastructure.Identity;

@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Authentication;
 using Yggdrasil.Application.Options;
 
