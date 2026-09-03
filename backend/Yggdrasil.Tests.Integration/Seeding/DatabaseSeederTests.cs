@@ -13,8 +13,9 @@ namespace Yggdrasil.Tests.Integration.Seeding;
 
 public sealed class SeededDatabase : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container =
-        new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(
+        "postgres:17-alpine"
+    ).Build();
 
     public YggdrasilDbContext Db { get; private set; } = null!;
 
@@ -30,8 +31,11 @@ public sealed class SeededDatabase : IAsyncLifetime
     }
 
     public YggdrasilDbContext NewContext() =>
-        new(new DbContextOptionsBuilder<YggdrasilDbContext>()
-            .UseNpgsql(_container.GetConnectionString()).Options);
+        new(
+            new DbContextOptionsBuilder<YggdrasilDbContext>()
+                .UseNpgsql(_container.GetConnectionString())
+                .Options
+        );
 
     public async Task DisposeAsync()
     {
@@ -50,7 +54,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         (await Db.Users.CountAsync()).ShouldBe(3);
         (await Db.Roles.CountAsync()).ShouldBe(2);
         (await Db.UserRoles.CountAsync()).ShouldBe(3);
-        (await Db.Categories.CountAsync()).ShouldBe(4);
+        (await Db.Categories.CountAsync()).ShouldBe(5);
         (await Db.Quizzes.CountAsync()).ShouldBe(4);
         (await Db.Questions.CountAsync()).ShouldBe(16);
         (await Db.AnswerOptions.CountAsync()).ShouldBe(64);
@@ -58,12 +62,36 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     }
 
     [Fact]
-    public async Task EveryQuizIsTaggedWithExactlyOneCategory()
+    public async Task EveryQuizIsTaggedWithAtLeastOneCategory()
     {
         var quizzes = await Db.Quizzes.Include(q => q.Categories).ToListAsync();
-        quizzes.ShouldAllBe(q => q.Categories.Count == 1);
-        quizzes.SelectMany(q => q.Categories).Select(c => c.Slug).Order()
-               .ShouldBe(["games", "music", "sports", "tv-shows"]);
+        quizzes.ShouldAllBe(q => q.Categories.Count >= 1);
+        quizzes
+            .SelectMany(q => q.Categories)
+            .Select(c => c.Slug)
+            .Distinct()
+            .Order()
+            .ShouldBe(["games", "music", "pop-culture", "sports", "tv-shows"]);
+    }
+
+    [Fact]
+    public async Task TwoQuizzesCarryTwoCategoriesEach()
+    {
+        var quizzes = await Db.Quizzes.Include(q => q.Categories).ToListAsync();
+
+        quizzes.Count(q => q.Categories.Count == 2).ShouldBe(2);
+        quizzes.SelectMany(q => q.Categories).Count().ShouldBe(6);
+    }
+
+    [Fact]
+    public async Task OneCategoryIsSharedAcrossQuizzes_WithoutDuplicatingTheCategoryRow()
+    {
+        var popCulture = await Db
+            .Categories.Include(c => c.Quizzes)
+            .SingleAsync(c => c.Slug == "pop-culture");
+
+        popCulture.Quizzes.Count.ShouldBe(2);
+        (await Db.Categories.CountAsync(c => c.Slug == "pop-culture")).ShouldBe(1);
     }
 
     [Fact]
@@ -90,8 +118,13 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     [Fact]
     public async Task CommentsAreWrittenByUsersWhoDoNotOwnTheQuiz()
     {
-        var pairs = await Db.Comments
-            .Join(Db.Quizzes, c => c.QuizId, q => q.Id, (c, q) => new { c.AuthorId, q.OwnerId })
+        var pairs = await Db
+            .Comments.Join(
+                Db.Quizzes,
+                c => c.QuizId,
+                q => q.Id,
+                (c, q) => new { c.AuthorId, q.OwnerId }
+            )
             .ToListAsync();
         pairs.ShouldAllBe(x => x.AuthorId != x.OwnerId);
     }
