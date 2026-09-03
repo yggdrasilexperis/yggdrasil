@@ -25,6 +25,7 @@ if (args.Contains("--seed"))
     return;
 }
 
+app.UseCors(CorsExtensions.PolicyName);
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -33,7 +34,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors(CorsExtensions.PolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
