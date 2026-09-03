@@ -26,8 +26,6 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
             .NotEmpty()
             .WithMessage("Password is required")
             .Length(8, 32)
-            .WithMessage("Password must be between 8 and 32 characters")
-            .Matches("^[a-zA-Z0-9_-]+$")
-            .WithMessage("Password can only contain letters, numbers, underscores, and dashes.");
+            .WithMessage("Password must be between 8 and 32 characters");
     }
 }
