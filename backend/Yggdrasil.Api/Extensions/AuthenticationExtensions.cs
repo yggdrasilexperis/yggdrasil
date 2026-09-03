@@ -11,7 +11,8 @@ public static class AuthenticationExtensions
 {
     private const int MinimumKeyBytes = 32; // hmac-sha256 floor
 
-    public static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJwtAuth(this IServiceCollection services,
+        IConfiguration configuration, IWebHostEnvironment environment)
     {
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
             ?? throw new InvalidOperationException($"The '{JwtOptions.SectionName}' configuration section is missing.");
@@ -23,7 +24,7 @@ public static class AuthenticationExtensions
             .AddJwtBearer(options =>
             {
                 options.MapInboundClaims = false;
-                options.RequireHttpsMetadata = false; // This is temp!
+                options.RequireHttpsMetadata = !environment.IsDevelopment();
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {

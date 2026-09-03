@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
-builder.Services.AddJwtAuth(builder.Configuration);
+builder.Services.AddJwtAuth(builder.Configuration, builder.Environment);
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
