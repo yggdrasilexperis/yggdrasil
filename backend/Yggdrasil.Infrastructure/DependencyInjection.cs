@@ -6,6 +6,7 @@ using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Options;
 using Yggdrasil.Infrastructure.Identity;
 using Yggdrasil.Infrastructure.Persistence;
+using Yggdrasil.Infrastructure.Persistence.Seeding;
 
 namespace Yggdrasil.Infrastructure;
 
@@ -44,6 +45,8 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+
+        services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
         return services;
     }

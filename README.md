@@ -59,7 +59,15 @@ your own, never commit or share it.
 dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
 ```
 
-**7. Install frontend dependencies.**
+**7. Seed database.**
+
+```
+dotnet run --project backend/Yggdrasil.Api -- --seed
+```
+
+The test users all share the same password:
+
+**8. Install frontend dependencies.**
 
 ```bash
 npm --prefix frontend install

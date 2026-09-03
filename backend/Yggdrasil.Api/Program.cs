@@ -2,6 +2,7 @@ using Yggdrasil.Api.Endpoints;
 using Yggdrasil.Api.Extensions;
 using Yggdrasil.Api.Handlers;
 using Yggdrasil.Application;
+using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,14 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApiDocumentation();
 
 var app = builder.Build();
+
+
+if (args.Contains("--seed"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>().SeedAsync();
+    return;
+}
 
 app.UseExceptionHandler();
 
