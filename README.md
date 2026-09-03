@@ -41,13 +41,27 @@ secret, so it lives outside the repository. Into the command insert the password
 dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=yggdrasil;Username=yggdrasil;Password=<your .env password>" --project backend/Yggdrasil.Api
 ```
 
-**5. Create the schema.**
+**5. Configure the JWT issuer signing key.** The API signs every token it issues
+with this key and refuses to start without one. It is per-developer. Generate
+your own, never commit or share it.
+
+> [!IMPORTANT]
+> **Prerequisite:** `openssl`
+>> Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
+
+```bash
+dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
+```
+
+**6. Create the schema.**
 
 ```bash
 dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
-**6. Seed database.**
+
+
+**7. Seed database.**
 
 ```
 dotnet run --project backend/Yggdrasil.Api -- --seed
@@ -55,7 +69,7 @@ dotnet run --project backend/Yggdrasil.Api -- --seed
 
 The test users all share the same password:
 
-**7. Install frontend dependencies.**
+**8. Install frontend dependencies.**
 
 ```bash
 npm --prefix frontend install

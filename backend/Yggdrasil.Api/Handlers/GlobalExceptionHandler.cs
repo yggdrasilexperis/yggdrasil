@@ -30,6 +30,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 "Invalid request",
                 "The request could not be read. Verify it's valid JSON"
             ),
+            UnauthorizedException ex => (StatusCodes.Status401Unauthorized, ex.Title, ex.Message),
             ValidationException => (
                 StatusCodes.Status400BadRequest,
                 "Validation failed",
