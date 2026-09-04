@@ -7,6 +7,7 @@ using Yggdrasil.Application.Options;
 using Yggdrasil.Infrastructure.Identity;
 using Yggdrasil.Infrastructure.Persistence;
 using Yggdrasil.Infrastructure.Persistence.Seeding;
+using Yggdrasil.Infrastructure.Repositories;
 
 namespace Yggdrasil.Infrastructure;
 
@@ -45,7 +46,7 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
-
+        services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
         return services;
