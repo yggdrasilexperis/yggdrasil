@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Options;
+using Yggdrasil.Application.Services;
 using Yggdrasil.Infrastructure.Identity;
 using Yggdrasil.Infrastructure.Persistence;
 using Yggdrasil.Infrastructure.Persistence.Seeding;
@@ -48,6 +49,9 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IQuizRepository,  QuizRepository>();
+        services.AddScoped<IQuizService, QuizService>();
 
         return services;
     }
