@@ -40,7 +40,7 @@ public static class QuizEndpoints
         return TypedResults.Created((string?)null, response);
     }
 
-    private static async Task<Ok<QuizResponse>> GetById(
+    private static async Task<Ok<DetailedQuizResponse>> GetById(
         Guid id,
         IQuizService quizService,
         CancellationToken cancellationToken

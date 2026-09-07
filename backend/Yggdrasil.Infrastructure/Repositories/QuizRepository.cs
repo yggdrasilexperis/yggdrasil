@@ -45,9 +45,11 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
 
     public Task<Quiz?> GetByQuizIdAsync(Guid quizId, CancellationToken cancellationToken)
     {
-        return _dbContext.Quizzes.Include(q => q.Categories)
+        return _dbContext.Quizzes
+            .Include(q => q.Categories)
+            .Include(q => q.Questions)
+            .ThenInclude(q => q.AnswerOptions)
             .FirstOrDefaultAsync(q => q.Id == quizId, cancellationToken);
-
     }
 
     public Task<Quiz?> GetByQuizTitleAsync(string quizName, CancellationToken cancellationToken)

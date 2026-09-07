@@ -47,13 +47,13 @@ public class QuizService(
         );
     }
 
-    public async Task<QuizResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<DetailedQuizResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
-
+        
         if (quiz != null)
         {
-            return new QuizResponse(
+            return new DetailedQuizResponse(
                 quiz.Id,
                 quiz.Title,
                 quiz.Description,
@@ -61,7 +61,12 @@ public class QuizService(
                 quiz.Difficulty,
                 quiz.CreatedAt,
                 quiz.UpdatedAt,
-                quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug)));
+                quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug)),
+                quiz.Questions.Select(q => new QuestionResponse(
+                    q.Id,
+                    q.Text,
+                    q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
+                )));
         }
 
         logger.LogWarning("Quiz with id {id} not found", id);
