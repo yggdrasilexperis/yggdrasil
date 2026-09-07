@@ -17,6 +17,8 @@ public static class QuizEndpoints
         group.MapPost("/", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
         group.MapPut("/{id:guid}", Update).RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<UpdateQuizRequest>>();
+        group.MapGet("/{id:guid}/comments", GetComments);
+        group.MapGet("/{id:guid}/questions", GetQuestions);
         group.MapDelete("/{id:guid}", Delete).RequireAuthorization();
 
         return app;
@@ -40,7 +42,7 @@ public static class QuizEndpoints
         return TypedResults.Created((string?)null, response);
     }
 
-    private static async Task<Ok<DetailedQuizResponse>> GetById(
+    private static async Task<Ok<QuizContentResponse>> GetById(
         Guid id,
         IQuizService quizService,
         CancellationToken cancellationToken
@@ -69,6 +71,24 @@ public static class QuizEndpoints
         await quizService.DeleteAsync(id, cancellationToken);
         
         return TypedResults.NoContent();
+    }
+    
+    private static async Task<Ok<IEnumerable<CommentResponse>>> GetComments(
+        Guid id,
+        IQuizService quizService,
+        CancellationToken cancellationToken)
+    {
+        var response = await quizService.GetCommentsAsync(id, cancellationToken);
+        return TypedResults.Ok(response);
+    }
+    
+    private static async Task<Ok<IEnumerable<QuestionResponse>>> GetQuestions(
+        Guid id,
+        IQuizService quizService,
+        CancellationToken cancellationToken)
+    {
+        var response = await quizService.GetQuestionsAsync(id, cancellationToken);
+        return TypedResults.Ok(response);
     }
 }
 

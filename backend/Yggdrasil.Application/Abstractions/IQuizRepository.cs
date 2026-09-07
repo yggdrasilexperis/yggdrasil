@@ -11,4 +11,7 @@ public interface IQuizRepository
     Task<List<Quiz>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<Quiz?> GetByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
     Task<Quiz?> GetByQuizTitleAsync(string quizName, CancellationToken cancellationToken);
+    Task<List<Comment>> GetCommentsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
+    Task<List<Question>> GetQuestionsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
+    Task<bool> QuizExistsAsync(Guid quizId, CancellationToken cancellationToken);
 }

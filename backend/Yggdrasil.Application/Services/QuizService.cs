@@ -47,31 +47,26 @@ public class QuizService(
         );
     }
 
-    public async Task<DetailedQuizResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<QuizContentResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
-        
-        if (quiz != null)
+        var quiz = await quizRepository.QuizExistsAsync(id, cancellationToken);
+        if (!quiz)
         {
-            return new DetailedQuizResponse(
-                quiz.Id,
-                quiz.Title,
-                quiz.Description,
-                quiz.OwnerId,
-                quiz.Difficulty,
-                quiz.CreatedAt,
-                quiz.UpdatedAt,
-                quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug)),
-                quiz.Questions.Select(q => new QuestionResponse(
-                    q.Id,
-                    q.Text,
-                    q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
-                )));
+            logger.LogWarning("Quiz with id {id} not found", id);
+            throw new NotFoundException("Quiz", id);
         }
+        
+        var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
+        var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
-        logger.LogWarning("Quiz with id {id} not found", id);
-        throw new NotFoundException("Quiz", id);
-
+        return new QuizContentResponse(
+            questions.Select(q => new QuestionResponse(
+                q.Id,
+                q.Text,
+                q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
+            )),
+            comments.Select(c => new CommentResponse(c.Id, c.AuthorId, c.Body, c.CreatedAt, c.UpdatedAt))
+        );
     }
 
     public async Task<IEnumerable<QuizResponse>> GetAllAsync(CancellationToken cancellationToken)
@@ -137,5 +132,33 @@ public class QuizService(
             return;
 
         await quizRepository.DeleteAsync(id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<CommentResponse>> GetCommentsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var exists = await quizRepository.QuizExistsAsync(id, cancellationToken);
+        if (!exists)
+        {
+            throw new NotFoundException("Quiz", id);
+        }
+        var  comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
+
+        return comments.Select(c => new CommentResponse(c.Id, c.AuthorId, c.Body, c.CreatedAt, c.UpdatedAt));
+    }
+
+    public async Task<IEnumerable<QuestionResponse>> GetQuestionsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var exists = await quizRepository.QuizExistsAsync(id, cancellationToken);
+        if (!exists)
+        {
+            throw new NotFoundException("Quiz", id);
+        }
+        var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
+
+        return questions.Select(q => new QuestionResponse(
+            q.Id,
+            q.Text,
+            q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
+        ));
     }
 }
