@@ -5,7 +5,7 @@ namespace Yggdrasil.Application.Contracts.Quiz;
 public record QuizResponse(
     Guid Id,
     string Title,
-    string Description,
+    string? Description,
     Guid OwnerId,
     Difficulty Difficulty,
     DateTimeOffset CreatedAt,

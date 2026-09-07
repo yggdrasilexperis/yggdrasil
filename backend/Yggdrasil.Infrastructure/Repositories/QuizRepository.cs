@@ -9,7 +9,7 @@ namespace Yggdrasil.Infrastructure.Repositories;
 public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
 {
     private readonly YggdrasilDbContext _dbContext = dbContext;
-    
+
     public async Task UpdateAsync(Quiz quiz, CancellationToken cancellationToken)
     {
         _dbContext.Quizzes.Update(quiz);
@@ -25,7 +25,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
     public async Task DeleteAsync(Guid quizId, CancellationToken cancellationToken)
     {
         Quiz? quiz = await GetByQuizIdAsync(quizId, cancellationToken);
-        if(quiz == null)
+        if (quiz == null)
             return;
         _dbContext.Quizzes.Remove(quiz);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -47,7 +47,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
     {
         return _dbContext.Quizzes.Include(q => q.Categories)
             .FirstOrDefaultAsync(q => q.Id == quizId, cancellationToken);
-        
+
     }
 
     public Task<Quiz?> GetByQuizTitleAsync(string quizName, CancellationToken cancellationToken)
