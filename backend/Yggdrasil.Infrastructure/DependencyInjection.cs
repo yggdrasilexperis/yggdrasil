@@ -1,12 +1,16 @@
+using FluentValidation;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Options;
+using Yggdrasil.Application.Services;
 using Yggdrasil.Infrastructure.Identity;
 using Yggdrasil.Infrastructure.Persistence;
 using Yggdrasil.Infrastructure.Persistence.Seeding;
+using Yggdrasil.Infrastructure.Repositories;
 
 namespace Yggdrasil.Infrastructure;
 
@@ -45,8 +49,12 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
-
+        services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IQuizService, QuizService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         return services;
     }
