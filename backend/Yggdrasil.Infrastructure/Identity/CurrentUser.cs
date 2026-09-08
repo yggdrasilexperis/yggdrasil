@@ -1,6 +1,8 @@
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.JsonWebTokens;
+
 using Yggdrasil.Application.Abstractions;
 
 namespace Yggdrasil.Infrastructure.Identity;

@@ -69,10 +69,10 @@ public static class QuizEndpoints
     )
     {
         await quizService.DeleteAsync(id, cancellationToken);
-        
+
         return TypedResults.NoContent();
     }
-    
+
     private static async Task<Ok<IEnumerable<CommentResponse>>> GetComments(
         Guid id,
         IQuizService quizService,
@@ -81,7 +81,7 @@ public static class QuizEndpoints
         var response = await quizService.GetCommentsAsync(id, cancellationToken);
         return TypedResults.Ok(response);
     }
-    
+
     private static async Task<Ok<IEnumerable<QuestionResponse>>> GetQuestions(
         Guid id,
         IQuizService quizService,

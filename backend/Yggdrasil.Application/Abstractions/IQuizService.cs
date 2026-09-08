@@ -11,5 +11,5 @@ public interface IQuizService
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
     Task<IEnumerable<CommentResponse>> GetCommentsAsync(Guid id, CancellationToken cancellationToken);
     Task<IEnumerable<QuestionResponse>> GetQuestionsAsync(Guid id, CancellationToken cancellationToken);
-    
+
 }

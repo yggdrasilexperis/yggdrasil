@@ -28,7 +28,7 @@ public class QuizService(
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            OwnerId =  currentUser.UserId,
+            OwnerId = currentUser.UserId,
             Difficulty = request.Difficulty,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -56,7 +56,7 @@ public class QuizService(
             logger.LogWarning("Quiz with id {id} not found", id);
             throw new NotFoundException("Quiz", id);
         }
-        
+
         var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
@@ -99,7 +99,7 @@ public class QuizService(
         {
             throw new ForbiddenException("update this quiz");
         }
-        
+
         var categories = await categoryRepository.GetByIdsAsync(request.CategoryIds, cancellationToken);
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
@@ -136,7 +136,7 @@ public class QuizService(
         var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
         if (quiz == null)
             return;
-        
+
         if (quiz.OwnerId != currentUser.UserId)
         {
             throw new ForbiddenException("delete this quiz");
@@ -152,7 +152,7 @@ public class QuizService(
         {
             throw new NotFoundException("Quiz", id);
         }
-        var  comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
+        var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
         return comments.Select(c => new CommentResponse(c.Id, c.AuthorId, c.Body, c.CreatedAt, c.UpdatedAt));
     }
