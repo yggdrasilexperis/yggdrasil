@@ -12,14 +12,14 @@ public static class QuizEndpoints
     public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("api/quizzes").WithTags("Quizzes");
-        group.MapGet("/", GetAll);
-        group.MapGet("/{id:guid}", GetById);
-        group.MapPost("/", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
-        group.MapPut("/{id:guid}", Update).RequireAuthorization()
+        group.MapGet("/GetAllQuizzes", GetAll);
+        group.MapGet("GetSingleQuiz/{id:guid}", GetById);
+        group.MapPost("/CreateQuiz", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
+        group.MapPut("UpdateQuiz/{id:guid}", Update).RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<UpdateQuizRequest>>();
-        group.MapGet("/{id:guid}/comments", GetComments);
-        group.MapGet("/{id:guid}/questions", GetQuestions);
-        group.MapDelete("/{id:guid}", Delete).RequireAuthorization();
+        group.MapGet("GetComments/{id:guid}/comments", GetComments);
+        group.MapGet("GetQuestions/{id:guid}/questions", GetQuestions);
+        group.MapDelete("DeleteQuiz/{id:guid}", Delete).RequireAuthorization();
 
         return app;
     }
