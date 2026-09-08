@@ -1,3 +1,5 @@
+using FluentValidation;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,8 +52,9 @@ public static class DependencyInjection
         services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<IQuizRepository,  QuizRepository>();
         services.AddScoped<IQuizService, QuizService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         return services;
     }
