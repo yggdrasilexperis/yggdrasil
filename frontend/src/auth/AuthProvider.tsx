@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { login, register } from '../api/auth';
@@ -26,6 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession();
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    const id = setTimeout(signOut, Date.parse(session.expiresAt) - Date.now());
+    return () => clearTimeout(id);
+  }, [user, signOut]);
 
   const value = useMemo(() => ({ user, signIn, signUp, signOut }), [user, signIn, signUp, signOut]);
 
