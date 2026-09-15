@@ -115,7 +115,23 @@ need `import type`.
 
 ## Current state
 
-Scaffolding only. The Vite template markup, CSS and assets have been stripped;
-`App.tsx` is a placeholder landing page and the first real work replaces it.
-`react-router-dom` is installed but not wired up, and `src/api/` and `src/components/`
-do not exist yet — create them when the first caller needs them.
+Auth (`/login`, `/register`) and the protected `/` landing are built end-to-end against
+the backend. Routing, layout and state conventions below are settled — follow them
+rather than re-deciding per page.
+
+**Routing & layout.** `App.tsx` declares routes with `react-router-dom`; every route
+nests under one `AppLayout` layout route (`src/layout/AppLayout.tsx`) that renders the
+header/nav once and the page into its `<Outlet />` — a page component never renders its
+own `<header>` or top-level `<main>`. `RequireAuth` gates protected routes and bounces to
+`/login`. An unmatched path renders `NotFoundPage`, not a redirect.
+
+**Components.** Shared, generic primitives (`Button`, `Input`, ...) live in
+`src/components/`. Page components live at the top of `src/` (`Home.tsx`,
+`NotFoundPage.tsx`) or, once a feature has more than one file, in its own folder next to
+the components/hooks only it uses (see `src/auth/`). Pull markup into a component the
+second time it repeats, not the first.
+
+**State.** Cross-page state goes through React Context plus a `useX` hook — see
+`AuthContext`/`AuthProvider`/`useAuth`. Reach for this only when more than one page
+needs the state; keep everything else local with `useState`. No state-management
+library.

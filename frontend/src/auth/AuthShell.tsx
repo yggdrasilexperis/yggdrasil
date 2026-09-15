@@ -11,7 +11,7 @@ type Props = {
 /** Shared chrome for the sign-in and sign-up forms: a centred card on parchment. */
 export function AuthShell({ title, subtitle, children, footer }: Props) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-parchment px-6 py-12">
+    <div className="flex flex-1 flex-col items-center justify-center bg-parchment px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="rounded-card border border-hairline bg-white p-6">
           <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
@@ -20,6 +20,6 @@ export function AuthShell({ title, subtitle, children, footer }: Props) {
         </div>
         <p className="mt-6 text-center text-sm text-muted">{footer}</p>
       </div>
-    </main>
+    </div>
   );
 }
