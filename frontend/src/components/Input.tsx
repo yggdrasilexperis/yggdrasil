@@ -21,8 +21,9 @@ export function Input({ label, error, className = '', id, ...props }: Props) {
         id={inputId}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`h-11 w-full rounded-control border px-4 placeholder:text-muted ${error ? 'border-red-600' : 'border-hairline'
-          }`}
+        className={`h-11 w-full rounded-control border px-4 placeholder:text-muted ${
+          error ? 'border-red-600' : 'border-hairline'
+        }`}
         {...props}
       />
       {error && (
