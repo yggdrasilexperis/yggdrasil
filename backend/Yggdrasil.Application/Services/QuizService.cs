@@ -19,8 +19,9 @@ public class QuizService(
         var categories = await categoryRepository.GetByIdsAsync(request.CategoryIds, cancellationToken);
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
-            logger.LogWarning("Category list not found for quiz with id {id} not found", request.CategoryIds);
-            throw new NotFoundException("Category", request.CategoryIds);
+            var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
+            logger.LogWarning("Category list not found for quiz with id {id} not found", missing);
+            throw new NotFoundException("Category", string.Join(", ", missing));
         }
 
         var newQuiz = new Quiz
@@ -103,9 +104,10 @@ public class QuizService(
         var categories = await categoryRepository.GetByIdsAsync(request.CategoryIds, cancellationToken);
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
-            // need to improve logging
-            logger.LogWarning("Category with id {id} not found", request.CategoryIds);
-            throw new NotFoundException("Category", request.CategoryIds);
+            var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
+            
+            logger.LogWarning("Category with id {id} not found", missing);
+            throw new NotFoundException("Category", string.Join(", ", missing));
         }
 
         quiz.Title = request.Title;
