@@ -1,7 +1,7 @@
 namespace Yggdrasil.Application.Contracts.Quiz;
 
 public record CommentResponse(
-    Guid QuizId,
+    Guid Id,
     Guid AuthorId,
     string Body,
     DateTimeOffset CreatedAt,
