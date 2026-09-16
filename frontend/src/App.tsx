@@ -3,9 +3,11 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth';
 import { SignInPage } from './auth/SignInPage';
 import { SignUpPage } from './auth/SignUpPage';
-import { Home } from './Home';
 import { AppLayout } from './layout/AppLayout';
 import { NotFoundPage } from './NotFoundPage';
+import { DiscoverPage } from './quiz/DiscoverPage';
+import { QuizDetailPage } from './quiz/QuizDetailPage';
+import { QuizEditStub } from './quiz/QuizEditStub';
 
 function App() {
   return (
@@ -13,11 +15,15 @@ function App() {
       <Route element={<AppLayout />}>
         <Route path="/login" element={<SignInPage />} />
         <Route path="/register" element={<SignUpPage />} />
+
+        <Route path="/" element={<DiscoverPage />} />
+        <Route path="/quizzes/:id" element={<QuizDetailPage />} />
+
         <Route
-          path="/"
+          path="/quizzes/:id/edit"
           element={
             <RequireAuth>
-              <Home />
+              <QuizEditStub />
             </RequireAuth>
           }
         />
