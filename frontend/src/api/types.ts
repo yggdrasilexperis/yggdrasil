@@ -31,3 +31,29 @@ export type ProblemDetails = {
   instance: string;
   errors?: Record<string, string[]>;
 };
+
+export type Difficulty = 0 | 1 | 2 | 3;
+
+export type Category = {
+  categoryId: string;
+  name: string;
+  slug: string;
+};
+
+export type CreateQuizRequest = {
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  categoryIds: string[];
+};
+
+export type Quiz = {
+  id: string;
+  title: string;
+  description: string | null;
+  ownerId: string;
+  difficulty: Difficulty;
+  createdAt: string;
+  updatedAt: string;
+  categories: Category[];
+};
