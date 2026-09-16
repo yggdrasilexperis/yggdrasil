@@ -6,4 +6,3 @@ public record CommentResponse(
     string Body,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
-

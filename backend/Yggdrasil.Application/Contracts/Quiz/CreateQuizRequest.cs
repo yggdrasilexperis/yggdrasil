@@ -7,7 +7,3 @@ public record CreateQuizRequest(
     string Description,
     Difficulty Difficulty,
     ICollection<Guid> CategoryIds);
-
-
-
-
