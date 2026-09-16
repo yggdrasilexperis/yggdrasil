@@ -53,8 +53,6 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IQuizService, QuizService>();
-        services.AddHttpContextAccessor();
-        services.AddScoped<ICurrentUser, CurrentUser>();
 
         return services;
     }

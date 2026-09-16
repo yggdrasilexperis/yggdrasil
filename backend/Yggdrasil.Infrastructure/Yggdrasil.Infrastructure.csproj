@@ -4,11 +4,7 @@
     <ProjectReference Include="..\Yggdrasil.Application\Yggdrasil.Application.csproj" />
     <ProjectReference Include="..\Yggdrasil.Domain\Yggdrasil.Domain.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
