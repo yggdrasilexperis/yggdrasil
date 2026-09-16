@@ -75,6 +75,12 @@ The test users all share the same password:
 npm --prefix frontend install
 ```
 
+**9. Frontend environment file.** Copy the example and set the backend URL
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
 ## Running it
 
 Run each command in seperate terminals
