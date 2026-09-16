@@ -6,6 +6,7 @@ import { SignUpPage } from './auth/SignUpPage';
 import { Home } from './Home';
 import { AppLayout } from './layout/AppLayout';
 import { NotFoundPage } from './NotFoundPage';
+import { CreateQuizPage } from './quiz/CreateQuizPage';
 
 function App() {
   return (
@@ -18,6 +19,14 @@ function App() {
           element={
             <RequireAuth>
               <Home />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="quizzes/new"
+          element={
+            <RequireAuth>
+              <CreateQuizPage />
             </RequireAuth>
           }
         />
