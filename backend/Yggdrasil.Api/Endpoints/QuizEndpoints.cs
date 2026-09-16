@@ -18,7 +18,7 @@ public static class QuizEndpoints
         group.MapPut("/{id:guid}", Update).RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<UpdateQuizRequest>>();
         group.MapGet("/{id:guid}/comments", GetComments);
-        group.MapGet("/{id:guid}/questions", GetQuestions);
+        group.MapGet("/{id:guid}/questions", GetQuestions).RequireAuthorization();
         group.MapDelete("delete/{id:guid}", Delete).RequireAuthorization();
 
         return app;
