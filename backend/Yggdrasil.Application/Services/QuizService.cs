@@ -51,18 +51,27 @@ public class QuizService(
 
     public async Task<QuizContentResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var quiz = await quizRepository.QuizExistsAsync(id, cancellationToken);
-        if (!quiz)
+        var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
+        if (quiz == null)
         {
             logger.LogWarning("Quiz with id {id} not found", id);
             throw new NotFoundException("Quiz", id);
         }
-
-        var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
+        
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
         return new QuizContentResponse(
-            questions.Select(q => new QuestionResponse(
+            new QuizResponse(
+                quiz.Id,
+                quiz.Title,
+                quiz.Description,
+                quiz.OwnerId,
+                quiz.Difficulty,
+                quiz.CreatedAt,
+                quiz.UpdatedAt,
+                quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
+            ),
+            quiz.Questions.Select(q => new QuestionResponse(
                 q.Id,
                 q.Text,
                 q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text))
