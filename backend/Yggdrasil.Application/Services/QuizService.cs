@@ -153,7 +153,7 @@ public class QuizService(
             throw new ForbiddenException("delete this quiz");
         }
 
-        await quizRepository.DeleteAsync(id, cancellationToken);
+        await quizRepository.DeleteAsync(quiz, cancellationToken);
     }
 
     public async Task<IEnumerable<CommentResponse>> GetCommentsAsync(Guid id, CancellationToken cancellationToken)

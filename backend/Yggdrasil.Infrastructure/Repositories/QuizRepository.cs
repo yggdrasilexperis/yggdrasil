@@ -12,7 +12,6 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
 
     public async Task UpdateAsync(Quiz quiz, CancellationToken cancellationToken)
     {
-        _dbContext.Quizzes.Update(quiz);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -22,11 +21,8 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid quizId, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Quiz quiz, CancellationToken cancellationToken)
     {
-        Quiz? quiz = await GetByQuizIdAsync(quizId, cancellationToken);
-        if (quiz == null)
-            return;
         _dbContext.Quizzes.Remove(quiz);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
