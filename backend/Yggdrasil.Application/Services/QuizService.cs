@@ -74,7 +74,7 @@ public class QuizService(
             quiz.Questions.Select(q => new QuestionResponse(
                 q.Id,
                 q.Text,
-                q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text))
+                q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
             )),
             comments.Select(c => new CommentResponse(c.Id, c.AuthorId, c.Body, c.CreatedAt, c.UpdatedAt))
         );
@@ -180,7 +180,7 @@ public class QuizService(
         return questions.Select(q => new QuestionResponse(
             q.Id,
             q.Text,
-            q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text))
+            q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
         ));
     }
 }

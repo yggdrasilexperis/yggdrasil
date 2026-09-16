@@ -2,4 +2,5 @@ namespace Yggdrasil.Application.Contracts.Quiz;
 
 public record AnswerOptionResponse(
     Guid Id,
-    string Text);
+    string Text,
+    bool IsCorrect);
