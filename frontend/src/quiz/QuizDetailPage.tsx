@@ -11,195 +11,196 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 
 export function QuizDetailPage() {
-    const { id } = useParams<{ id: string }>();
-    const { user } = useAuth();
-    const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-    const [detail, setDetail] = useState<QuizDetail | null>(null);
-    const [error, setError] = useState('');
-    const [deleting, setDeleting] = useState(false);
-    /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
-    const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [detail, setDetail] = useState<QuizDetail | null>(null);
+  const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
+  const [localComments, setLocalComments] = useState<Comment[]>([]);
 
-    useEffect(() => {
-        if (!id) return;
-        let cancelled = false;
-        getQuizDetail(id)
-            .then((data) => {
-                if (!cancelled) setDetail(data);
-            })
-            .catch(() => {
-                if (!cancelled) setError('Could not load this quiz.');
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    getQuizDetail(id)
+      .then((data) => {
+        if (!cancelled) setDetail(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Could not load this quiz.');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
-    async function handleDelete() {
-        if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
-        setDeleting(true);
-        try {
-            await deleteQuiz(id);
-            navigate('/', { replace: true });
-        } catch (err) {
-            setError(err instanceof ApiError ? err.detail || err.title : 'Could not delete this quiz.');
-            setDeleting(false);
-        }
+  async function handleDelete() {
+    if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await deleteQuiz(id);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail || err.title : 'Could not delete this quiz.');
+      setDeleting(false);
     }
+  }
 
-    function handleAddComment(body: string) {
-        if (!user) return;
-        setLocalComments((prev) => [
-            ...prev,
-            {
-                id: crypto.randomUUID(),
-                authorId: user.id,
-                body,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-        ]);
-    }
+  function handleAddComment(body: string) {
+    if (!user) return;
+    setLocalComments((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        authorId: user.id,
+        body,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }
 
-    if (error && !detail) {
-        return (
-            <div className="mx-auto max-w-3xl px-6 py-12">
-                <p role="alert" className="text-sm text-red-600">
-                    {error}
-                </p>
-            </div>
-        );
-    }
-
-    if (!detail) {
-        return (
-            <div className="mx-auto max-w-3xl px-6 py-12">
-                <p className="text-muted">Loading quiz…</p>
-            </div>
-        );
-    }
-
-    const { quiz, questions } = detail;
-    const isOwner = user?.id === quiz.ownerId;
-    const comments = [...detail.comments, ...localComments];
-
+  if (error && !detail) {
     return (
-        <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-            <div>
-                <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
-                {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
-                <div className="mt-3 flex items-center gap-2 text-sm text-muted">
-                    <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
-                    {quiz.categories.length > 0 && (
-                        <span>· {quiz.categories.map((c) => c.name).join(', ')}</span>
-                    )}
-                </div>
-
-                {isOwner && (
-                    <div className="mt-4 flex gap-3">
-                        <Link to={`/quizzes/${quiz.id}/edit`}>
-                            <Button variant="secondary">Edit</Button>
-                        </Link>
-                        <Button variant="utility" onClick={handleDelete} disabled={deleting}>
-                            {deleting ? 'Deleting…' : 'Delete'}
-                        </Button>
-                    </div>
-                )}
-
-                {error && (
-                    <p role="alert" className="mt-3 text-sm text-red-600">
-                        {error}
-                    </p>
-                )}
-            </div>
-
-            <div className="flex flex-col gap-4">
-                <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
-                {questions.map((question, index) => (
-                    <Card key={question.id} className="flex flex-col gap-3">
-                        <p className="font-display text-xl font-semibold">
-                            {index + 1}. {question.text}
-                        </p>
-                        <ul className="flex flex-col gap-2">
-                            {question.answerOptions.map((option) => (
-                                <li
-                                    key={option.id}
-                                    className={`rounded-control border px-4 py-3 ${option.isCorrect ? 'border-green-600' : 'border-hairline'
-                                        }`}
-                                >
-                                    {option.text}
-                                </li>
-                            ))}
-                        </ul>
-                    </Card>
-                ))}
-            </div>
-
-            <CommentSection comments={comments} canComment={!!user} onAdd={handleAddComment} />
-        </div>
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <p role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      </div>
     );
+  }
+
+  if (!detail) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <p className="text-muted">Loading quiz…</p>
+      </div>
+    );
+  }
+
+  const { quiz, questions } = detail;
+  const isOwner = user?.id === quiz.ownerId;
+  const comments = [...detail.comments, ...localComments];
+
+  return (
+    <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+      <div>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
+        {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
+        <div className="mt-3 flex items-center gap-2 text-sm text-muted">
+          <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
+          {quiz.categories.length > 0 && (
+            <span>· {quiz.categories.map((c) => c.name).join(', ')}</span>
+          )}
+        </div>
+
+        {isOwner && (
+          <div className="mt-4 flex gap-3">
+            <Link to={`/quizzes/${quiz.id}/edit`}>
+              <Button variant="secondary">Edit</Button>
+            </Link>
+            <Button variant="utility" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
+        )}
+
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
+        {questions.map((question, index) => (
+          <Card key={question.id} className="flex flex-col gap-3">
+            <p className="font-display text-xl font-semibold">
+              {index + 1}. {question.text}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {question.answerOptions.map((option) => (
+                <li
+                  key={option.id}
+                  className={`rounded-control border px-4 py-3 ${
+                    option.isCorrect ? 'border-green-600' : 'border-hairline'
+                  }`}
+                >
+                  {option.text}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ))}
+      </div>
+
+      <CommentSection comments={comments} canComment={!!user} onAdd={handleAddComment} />
+    </div>
+  );
 }
 
 function CommentSection({
-    comments,
-    canComment,
-    onAdd,
+  comments,
+  canComment,
+  onAdd,
 }: {
-    comments: Comment[];
-    canComment: boolean;
-    onAdd: (body: string) => void;
+  comments: Comment[];
+  canComment: boolean;
+  onAdd: (body: string) => void;
 }) {
-    const [body, setBody] = useState('');
+  const [body, setBody] = useState('');
 
-    function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
-        event.preventDefault();
-        if (!body.trim()) return;
-        onAdd(body.trim());
-        setBody('');
-    }
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!body.trim()) return;
+    onAdd(body.trim());
+    setBody('');
+  }
 
-    return (
-        <div className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl font-semibold tracking-tight">
-                Comments {comments.length > 0 && `(${comments.length})`}
-            </h2>
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="font-display text-2xl font-semibold tracking-tight">
+        Comments {comments.length > 0 && `(${comments.length})`}
+      </h2>
 
-            {comments.length === 0 && <p className="text-muted">No comments yet.</p>}
+      {comments.length === 0 && <p className="text-muted">No comments yet.</p>}
 
-            <ul className="flex flex-col gap-3">
-                {comments.map((comment) => (
-                    <li key={comment.id} className="rounded-card border border-hairline p-4">
-                        {/* No username-lookup endpoint exists — this is the raw author id. */}
-                        <p className="text-sm text-muted">{comment.authorId}</p>
-                        <p className="mt-1">{comment.body}</p>
-                    </li>
-                ))}
-            </ul>
+      <ul className="flex flex-col gap-3">
+        {comments.map((comment) => (
+          <li key={comment.id} className="rounded-card border border-hairline p-4">
+            {/* No username-lookup endpoint exists — this is the raw author id. */}
+            <p className="text-sm text-muted">{comment.authorId}</p>
+            <p className="mt-1">{comment.body}</p>
+          </li>
+        ))}
+      </ul>
 
-            {canComment ? (
-                <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                    <label htmlFor="comment-body" className="text-sm">
-                        Add a comment
-                    </label>
-                    <textarea
-                        id="comment-body"
-                        value={body}
-                        onChange={(event) => setBody(event.target.value)}
-                        className="min-h-24 w-full rounded-control border border-hairline px-4 py-3"
-                    />
-                    <Button type="submit" className="self-start">
-                        Post comment
-                    </Button>
-                </form>
-            ) : (
-                <p className="text-sm text-muted">
-                    <Link to="/login" className="text-accent">
-                        Sign in
-                    </Link>{' '}
-                    to leave a comment.
-                </p>
-            )}
-        </div>
-    );
+      {canComment ? (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <label htmlFor="comment-body" className="text-sm">
+            Add a comment
+          </label>
+          <textarea
+            id="comment-body"
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            className="min-h-24 w-full rounded-control border border-hairline px-4 py-3"
+          />
+          <Button type="submit" className="self-start">
+            Post comment
+          </Button>
+        </form>
+      ) : (
+        <p className="text-sm text-muted">
+          <Link to="/login" className="text-accent">
+            Sign in
+          </Link>{' '}
+          to leave a comment.
+        </p>
+      )}
+    </div>
+  );
 }

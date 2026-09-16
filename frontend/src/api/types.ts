@@ -32,7 +32,6 @@ export type ProblemDetails = {
   errors?: Record<string, string[]>;
 };
 
-
 /** Quiz domain — mirrors backend/Yggdrasil.Application/Contracts/Quiz. Confirm against the OpenAPI doc. */
 
 export type Difficulty = 0 | 1 | 2 | 3;
