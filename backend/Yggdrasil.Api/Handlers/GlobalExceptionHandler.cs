@@ -35,7 +35,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 ex.Title,
                 ex.Message
                 ),
-                
+
             UnauthorizedException ex => (StatusCodes.Status401Unauthorized, ex.Title, ex.Message),
             ValidationException => (
                 StatusCodes.Status400BadRequest,

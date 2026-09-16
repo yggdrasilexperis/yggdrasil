@@ -57,7 +57,7 @@ public class QuizService(
             logger.LogWarning("Quiz with id {id} not found", id);
             throw new NotFoundException("Quiz", id);
         }
-        
+
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
         return new QuizContentResponse(
@@ -114,7 +114,7 @@ public class QuizService(
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
             var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
-            
+
             logger.LogWarning("Category with id {id} not found", missing);
             throw new BadRequestException("category_not_found", $"Category id(s) not found: {string.Join(", ", missing)}");
         }
