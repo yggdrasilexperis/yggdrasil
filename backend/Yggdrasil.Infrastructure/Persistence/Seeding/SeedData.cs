@@ -52,8 +52,8 @@ internal static class SeedData
                 Description = description,
                 Difficulty = difficulty,
                 OwnerId = owners[i % owners.Length],
-                CreatedAt = At.AddDays(12 + i),
-                UpdatedAt = At.AddDays(12 + i),
+                CreatedAt = At.AddDays(-(i + 1)),
+                UpdatedAt = At.AddDays(-(i + 1)),
                 Categories = [Of(categoryId)],
             };
         }
