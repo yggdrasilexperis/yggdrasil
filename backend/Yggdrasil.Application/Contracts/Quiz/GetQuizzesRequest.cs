@@ -9,4 +9,5 @@ public sealed record GetQuizzesRequest(
 )
 {
     public const int MaxPageSize = 100;
+    public const int MaxCategoryChars = 100;
 }
