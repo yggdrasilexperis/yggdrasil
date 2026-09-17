@@ -18,4 +18,9 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
             return Guid.Parse(sub!);
         }
     }
+
+    public bool IsInRole(string role)
+    {
+        throw new NotImplementedException();
+    }
 }
