@@ -10,10 +10,18 @@ public class CategoryRepository(YggdrasilDbContext dbContext) : ICategoryReposit
 {
     private readonly YggdrasilDbContext _dbContext = dbContext;
 
-    public async Task<List<Category>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public async Task<List<Category>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken
+    )
     {
-        return await _dbContext.Categories
-            .Where(c => ids.Contains(c.Id))
+        return await _dbContext
+            .Categories.Where(c => ids.Contains(c.Id))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Category>> GetAllAsync(CancellationToken ct)
+    {
+        return await _dbContext.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
     }
 }
