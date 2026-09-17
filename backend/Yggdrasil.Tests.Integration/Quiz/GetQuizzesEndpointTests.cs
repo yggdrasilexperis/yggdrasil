@@ -69,16 +69,19 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("Ascending", new[] { "Alpha", "Bravo", "Charlie" })]
-    [InlineData("Descending", new[] { "Charlie", "Bravo", "Alpha" })]
-    public async Task GetQuizzes_SortedByTitle_OrdersInBothDirections(string direction, string[] expected)
+    [InlineData("Title", "Ascending", new[] { "Alpha", "Bravo", "Charlie" })]
+    [InlineData("Title", "Descending", new[] { "Charlie", "Bravo", "Alpha" })]
+    [InlineData("CreatedAt", "Ascending", new[] { "Charlie", "Alpha", "Bravo" })]
+    [InlineData("CreatedAt", "Descending", new[] { "Bravo", "Alpha", "Charlie" })]
+    public async Task GetQuizzes_WithSortByAndDirection_OrdersInThatDirection(
+    string sortBy, string direction, string[] expected)
     {
         await SeedQuizzesAsync(
             ("Charlie", BaseDate, null),
             ("Alpha", BaseDate.AddDays(1), null),
             ("Bravo", BaseDate.AddDays(2), null));
 
-        var response = await _client.GetAsync($"{Url}?sortBy=Title&sortDirection={direction}");
+        var response = await _client.GetAsync($"{Url}?sortBy={sortBy}&sortDirection={direction}");
         var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
 
         page!.Items.Select(q => q.Title).ShouldBe(expected);
