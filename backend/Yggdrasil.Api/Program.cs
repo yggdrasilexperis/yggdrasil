@@ -12,6 +12,7 @@ builder.Services.AddApplication();
 builder.Services.AddJwtAuth(builder.Configuration, builder.Environment);
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddProblemDetails();
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddCurrentUser();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApiDocumentation();

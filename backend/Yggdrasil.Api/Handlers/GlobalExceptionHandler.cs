@@ -28,7 +28,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             BadHttpRequestException => (
                 StatusCodes.Status400BadRequest,
                 "Invalid request",
-                "The request could not be read. Verify it's valid JSON"
+                "The request could not be read. Check the query string and the JSON body."
             ),
             BadRequestException ex => (
                 StatusCodes.Status400BadRequest,
