@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-import type { Quiz } from '../api/types';
+import type { QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
 import { CreateQuizForm } from './CreateQuizForm';
 
 export function CreateQuizPage() {
-  const [created, setCreated] = useState<Quiz | null>(null);
+  const [created, setCreated] = useState<QuizSummary | null>(null);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12">

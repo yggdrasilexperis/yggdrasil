@@ -3,7 +3,8 @@ import type { SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
 import { createQuiz, getCategories } from '../api/quizzes';
-import type { Category, Difficulty, Quiz } from '../api/types';
+import { DIFFICULTY_LABELS } from '../api/types';
+import type { Category, Difficulty, QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 
@@ -13,8 +14,6 @@ type FieldErrors = {
   difficulty?: string;
   categoryIds?: string;
 };
-
-const DIFFICULTIES = ['Easy', 'Normal', 'Hard', 'Expert'];
 
 function validate(
   title: string,
@@ -36,7 +35,7 @@ function validate(
   return errors;
 }
 
-export function CreateQuizForm({ onCreated }: { onCreated: (quiz: Quiz) => void }) {
+export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) => void }) {
   const categoriesId = useId();
   const descriptionId = useId();
   const difficultyId = useId();
@@ -165,8 +164,8 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: Quiz) => void 
           <option value="" disabled>
             Choose…
           </option>
-          {DIFFICULTIES.map((label, value) => (
-            <option key={label} value={value}>
+          {Object.entries(DIFFICULTY_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
               {label}
             </option>
           ))}
