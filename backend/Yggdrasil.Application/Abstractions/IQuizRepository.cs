@@ -10,7 +10,7 @@ public interface IQuizRepository
     Task CreateAsync(Quiz quiz, CancellationToken cancellationToken);
     Task DeleteAsync(Quiz quiz, CancellationToken cancellationToken);
 
-    // ** Depricated **
+    // ** Deprecated **
     // Task<List<Quiz>> GetAllQuizzesAsync(CancellationToken cancellationToken);
 
     Task<PagedResult<Quiz>> GetPagedAsync(GetQuizzesRequest getQuizzesRequest, CancellationToken cancellationToken);

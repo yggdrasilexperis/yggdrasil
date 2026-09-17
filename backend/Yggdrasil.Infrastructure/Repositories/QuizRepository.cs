@@ -29,7 +29,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // ** Depricated **
+    // ** Deprecated **
     // public Task<List<Quiz>> GetAllQuizzesAsync(CancellationToken cancellationToken)
     // {
     //     return _dbContext.Quizzes.Include(q => q.Categories)
