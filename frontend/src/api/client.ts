@@ -16,6 +16,17 @@ type RequestOptions = {
 };
 
 /**
+ * Called when an authenticated request comes back 401 — which means the stored token is
+ * stale or revoked. AuthProvider registers its `signOut` here so a plain module can react
+ * to that without importing React state directly.
+ */
+let onSessionExpired: (() => void) | null = null;
+
+export function setSessionExpiredHandler(handler: (() => void) | null): void {
+  onSessionExpired = handler;
+}
+
+/**
  * The only place the app talks to the network. Owns the base URL, the bearer
  * token, JSON handling, and turning ProblemDetails into an ApiError.
  */
@@ -46,7 +57,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     );
   }
 
-  if (!response.ok) throw await toApiError(response);
+  if (!response.ok) {
+    if (response.status === 401 && authenticated) onSessionExpired?.();
+    throw await toApiError(response);
+  }
 
   if (response.status === 204 || response.headers.get('Content-Length') === '0') {
     return undefined as T;
