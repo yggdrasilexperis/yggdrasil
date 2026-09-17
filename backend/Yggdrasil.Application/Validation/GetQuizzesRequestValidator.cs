@@ -9,8 +9,8 @@ public sealed class GetQuizzesRequestValidator : AbstractValidator<GetQuizzesReq
     public GetQuizzesRequestValidator()
     {
         RuleFor(request => request.Page)
-            .GreaterThanOrEqualTo(1)
-            .WithMessage("Page must be 1 or greater");
+            .InclusiveBetween(1, GetQuizzesRequest.MaxPage)
+            .WithMessage($"Page must be between 1 and {GetQuizzesRequest.MaxPage}");
 
         RuleFor(request => request.PageSize)
             .InclusiveBetween(1, GetQuizzesRequest.MaxPageSize)

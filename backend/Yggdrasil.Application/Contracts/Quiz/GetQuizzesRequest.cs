@@ -8,6 +8,7 @@ public sealed record GetQuizzesRequest(
     string? CategorySlug = null
 )
 {
+    public const int MaxPage = 10_100;
     public const int MaxPageSize = 100;
-    public const int MaxCategoryChars = 100;
+    public const int MaxCategoryChars = 150;
 }
