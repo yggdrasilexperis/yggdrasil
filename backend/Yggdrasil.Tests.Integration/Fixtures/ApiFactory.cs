@@ -52,7 +52,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await using var scope = Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<YggdrasilDbContext>()
-            .Database.ExecuteSqlRawAsync("""TRUNCATE "AspNetUsers" CASCADE""");
+            .Database.ExecuteSqlRawAsync("""TRUNCATE "AspNetUsers", "Categories" CASCADE""");
     }
 
     async Task IAsyncLifetime.DisposeAsync()
