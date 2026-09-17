@@ -26,7 +26,8 @@ public sealed class AuthServiceTests
     private static readonly UserResponse Account = new(
         Id: Guid.Parse("11111111-2222-3333-4444-555555555555"),
         Email: "ada@example.com",
-        UserName: "ada_lovelace"
+        UserName: "ada_lovelace",
+        Roles: ["Admin"]
     );
 
     private static readonly AccessToken Token = new(
