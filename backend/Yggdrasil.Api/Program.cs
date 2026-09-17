@@ -12,6 +12,7 @@ builder.Services.AddApplication();
 builder.Services.AddJwtAuth(builder.Configuration, builder.Environment);
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddProblemDetails();
+builder.Services.AddCurrentUser();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApiDocumentation();
 
@@ -38,6 +39,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
+app.MapQuizEndpoints();
 
 app.Run();
 

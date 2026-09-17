@@ -8,3 +8,4 @@ public abstract class AppException(string code, string title, string message) : 
     public string Code { get; } = code;
     public string Title { get; } = title;
 }
+
