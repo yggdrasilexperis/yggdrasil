@@ -55,7 +55,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         (await Db.Roles.CountAsync()).ShouldBe(2);
         (await Db.UserRoles.CountAsync()).ShouldBe(3);
         (await Db.Categories.CountAsync()).ShouldBe(5);
-        (await Db.Quizzes.CountAsync()).ShouldBe(4);
+        (await Db.Quizzes.CountAsync()).ShouldBe(24);
         (await Db.Questions.CountAsync()).ShouldBe(16);
         (await Db.AnswerOptions.CountAsync()).ShouldBe(64);
         (await Db.Comments.CountAsync()).ShouldBe(3);
@@ -80,7 +80,8 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         var quizzes = await Db.Quizzes.Include(q => q.Categories).ToListAsync();
 
         quizzes.Count(q => q.Categories.Count == 2).ShouldBe(2);
-        quizzes.SelectMany(q => q.Categories).Count().ShouldBe(6);
+        // 6 pairs from the four hand-written quizzes, plus one each from the 20 filler quizzes
+        quizzes.SelectMany(q => q.Categories).Count().ShouldBe(26);
     }
 
     [Fact]
@@ -90,7 +91,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
             .Categories.Include(c => c.Quizzes)
             .SingleAsync(c => c.Slug == "pop-culture");
 
-        popCulture.Quizzes.Count.ShouldBe(2);
+        popCulture.Quizzes.Count.ShouldBe(6);
         (await Db.Categories.CountAsync(c => c.Slug == "pop-culture")).ShouldBe(1);
     }
 
