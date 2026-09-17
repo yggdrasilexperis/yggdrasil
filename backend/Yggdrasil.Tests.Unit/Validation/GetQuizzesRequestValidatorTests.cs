@@ -17,7 +17,8 @@ public sealed class GetQuizzesRequestValidatorTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public void Validate_WhenPageIsNotPositive_FailsOnPage(int page)
+    [InlineData(GetQuizzesRequest.MaxPage + 1)]
+    public void Validate_WhenPageIsOutOfRange_FailsOnPage(int page)
     {
         var result = _sut.Validate(new GetQuizzesRequest(Page: page));
 

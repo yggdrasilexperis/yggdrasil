@@ -107,7 +107,9 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task GetQuizzes_WhenPageIsNotPositive_Returns400(int invalidPage)
+    [InlineData(GetQuizzesRequest.MaxPage + 1)]
+    [InlineData(int.MaxValue)]
+    public async Task GetQuizzes_WhenPageIsOutOfRange_Returns400(int invalidPage)
     {
         var response = await _client.GetAsync($"{Url}?page={invalidPage}");
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
