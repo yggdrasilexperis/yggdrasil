@@ -19,8 +19,5 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
         }
     }
 
-    public bool IsInRole(string role)
-    {
-        throw new NotImplementedException();
-    }
+    public bool IsInRole(string role) => httpContextAccessor.HttpContext?.User.IsInRole(role) ?? false;
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Contracts.Quiz;
 using Yggdrasil.Application.Exceptions;
+using Yggdrasil.Domain.Constants;
 using Yggdrasil.Domain.Entities;
 
 namespace Yggdrasil.Application.Services;
@@ -105,7 +106,7 @@ public class QuizService(
             logger.LogWarning("Quiz with id {id} not found", id);
             throw new NotFoundException("Quiz", id);
         }
-        if (quiz.OwnerId != currentUser.UserId)
+        if (quiz.OwnerId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
         {
             throw new ForbiddenException("update this quiz");
         }
@@ -148,7 +149,7 @@ public class QuizService(
         if (quiz == null)
             return;
 
-        if (quiz.OwnerId != currentUser.UserId)
+        if (quiz.OwnerId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
         {
             throw new ForbiddenException("delete this quiz");
         }

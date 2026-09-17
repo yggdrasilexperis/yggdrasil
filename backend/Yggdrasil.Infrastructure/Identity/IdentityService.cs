@@ -14,7 +14,7 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
 
         var user = await userManager.FindByEmailAsync(email);
 
-        return user is null ? null : ToResponse(user);
+        return user is null ? null : await ToResponseAsync(user);
     }
 
     public async Task<CreateUserResult> CreateUserAsync(RegisterRequest registerRequest, CancellationToken cancellationToken)
@@ -30,7 +30,7 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         var result = await userManager.CreateAsync(user, registerRequest.Password);
 
         return result.Succeeded
-            ? new CreateUserResult(Success: true, User: ToResponse(user), Errors: [])
+            ? new CreateUserResult(Success: true, User: await ToResponseAsync(user), Errors: [])
             : new CreateUserResult(
                 Success: false,
                 User: null,
@@ -48,6 +48,8 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
     }
 
     // Private helper
-    private static UserResponse ToResponse(ApplicationUser user)
-        => new(Id: user.Id, Email: user.Email!, UserName: user.UserName!);
+    private async Task<UserResponse> ToResponseAsync(ApplicationUser user)
+        => new(Id: user.Id, Email: user.Email!, UserName: user.UserName!, Roles:
+            [.. await userManager.GetRolesAsync(user)]
+        );
 }
