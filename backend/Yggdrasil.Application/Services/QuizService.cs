@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Quiz;
 using Yggdrasil.Application.Exceptions;
 using Yggdrasil.Domain.Entities;
@@ -80,11 +81,27 @@ public class QuizService(
         );
     }
 
-    public async Task<IEnumerable<QuizResponse>> GetAllAsync(CancellationToken cancellationToken)
-    {
-        var quizzes = await quizRepository.GetAllQuizzesAsync(cancellationToken);
+    // ** Deprecated **
+    // public async Task<IEnumerable<QuizResponse>> GetAllAsync(CancellationToken cancellationToken)
+    // {
+    //     var quizzes = await quizRepository.GetAllQuizzesAsync(cancellationToken);
 
-        return quizzes.Select(q => new QuizResponse(
+    //     return quizzes.Select(q => new QuizResponse(
+    //         q.Id,
+    //         q.Title,
+    //         q.Description,
+    //         q.OwnerId,
+    //         q.Difficulty,
+    //         q.CreatedAt,
+    //         q.UpdatedAt,
+    //         q.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
+    //     ));
+    // }
+
+    public async Task<PagedResult<QuizResponse>> GetPagedAsync(GetQuizzesRequest request, CancellationToken cancellationToken)
+    {
+        var result = await quizRepository.GetPagedAsync(request, cancellationToken);
+        var items = result.Items.Select(q => new QuizResponse(
             q.Id,
             q.Title,
             q.Description,
@@ -93,7 +110,9 @@ public class QuizService(
             q.CreatedAt,
             q.UpdatedAt,
             q.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
-        ));
+        )).ToList();
+
+        return new PagedResult<QuizResponse>(items, result.Page, result.PageSize, result.TotalCount);
     }
 
 
