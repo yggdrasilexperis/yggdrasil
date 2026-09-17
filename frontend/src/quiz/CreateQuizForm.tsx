@@ -70,10 +70,6 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: Quiz) => void 
     setCategoryIds((ids) => ids.filter((x) => x !== id));
   }
 
-  function toggleCategory(id: string) {
-    setCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
-  }
-
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError('');
