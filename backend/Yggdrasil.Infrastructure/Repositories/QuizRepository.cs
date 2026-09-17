@@ -40,7 +40,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         GetQuizzesRequest req,
         CancellationToken cancellationToken)
     {
-        var query = _dbContext.Quizzes.Include(q => q.Categories).AsQueryable();
+        var query = _dbContext.Quizzes.AsNoTracking().Include(q => q.Categories).AsQueryable();
         if (!string.IsNullOrWhiteSpace(req.CategorySlug))
             query = query.Where(q => q.Categories.Any(c => c.Slug == req.CategorySlug));
 
