@@ -221,9 +221,9 @@ public class QuizService(
         ));
     }
 
-    public async Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken ct)
+    public async Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken)
     {
-        var categories = await categoryRepository.GetAllAsync(ct);
+        var categories = await categoryRepository.GetAllAsync(cancellationToken);
         return categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug));
     }
 }

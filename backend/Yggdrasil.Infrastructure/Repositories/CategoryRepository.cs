@@ -20,8 +20,8 @@ public class CategoryRepository(YggdrasilDbContext dbContext) : ICategoryReposit
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Category>> GetAllAsync(CancellationToken ct)
+    public async Task<List<Category>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
+        return await _dbContext.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync(cancellationToken);
     }
 }

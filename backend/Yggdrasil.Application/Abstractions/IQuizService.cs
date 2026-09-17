@@ -24,5 +24,5 @@ public interface IQuizService
         Guid id,
         CancellationToken cancellationToken
     );
-    Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken ct);
+    Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken);
 }
