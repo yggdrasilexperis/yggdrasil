@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Yggdrasil.Api.Filters;
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Quiz;
 
 namespace Yggdrasil.Api.Endpoints;
@@ -12,7 +13,7 @@ public static class QuizEndpoints
     public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("api/quizzes").WithTags("Quizzes");
-        group.MapGet("/get-all", GetAll);
+        group.MapGet("/", GetPaged).AddEndpointFilter<ValidationFilter<GetQuizzesRequest>>();
         group.MapGet("/{id:guid}", GetById);
         group.MapPost("/create", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
         group.MapPut("/{id:guid}", Update).RequireAuthorization()
@@ -24,12 +25,13 @@ public static class QuizEndpoints
         return app;
     }
 
-    private static async Task<Ok<IEnumerable<QuizResponse>>> GetAll(
-        IQuizService service,
+    private static async Task<Ok<PagedResult<QuizResponse>>> GetPaged(
+        [AsParameters] GetQuizzesRequest request,
+        IQuizService quizService,
         CancellationToken cancellationToken
     )
     {
-        var response = await service.GetAllAsync(cancellationToken);
+        var response = await quizService.GetPagedAsync(request, cancellationToken);
         return TypedResults.Ok(response);
     }
 

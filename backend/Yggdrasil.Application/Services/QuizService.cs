@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Quiz;
 using Yggdrasil.Application.Exceptions;
 using Yggdrasil.Domain.Entities;
@@ -25,7 +26,7 @@ public class QuizService(
         );
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
-            var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
+            var missing = request.CategoryIds.Except(categories.Select(category => category.Id)).ToList();
             logger.LogWarning("Category list not found for quiz with id {id} not found", missing);
             throw new BadRequestException(
                 "category_not_found",
@@ -33,7 +34,7 @@ public class QuizService(
             );
         }
 
-        var newQuiz = new Quiz
+        var quiz = new Quiz
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
@@ -44,18 +45,9 @@ public class QuizService(
             UpdatedAt = DateTimeOffset.UtcNow,
             Categories = categories,
         };
-        await quizRepository.CreateAsync(newQuiz, cancellationToken);
+        await quizRepository.CreateAsync(quiz, cancellationToken);
 
-        return new QuizResponse(
-            newQuiz.Id,
-            newQuiz.Title,
-            newQuiz.Description,
-            newQuiz.OwnerId,
-            newQuiz.Difficulty,
-            newQuiz.CreatedAt,
-            newQuiz.UpdatedAt,
-            newQuiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
-        );
+        return ToResponse(quiz);
     }
 
     public async Task<QuizContentResponse> GetByIdAsync(
@@ -73,45 +65,24 @@ public class QuizService(
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
         return new QuizContentResponse(
-            new QuizResponse(
-                quiz.Id,
-                quiz.Title,
-                quiz.Description,
-                quiz.OwnerId,
-                quiz.Difficulty,
-                quiz.CreatedAt,
-                quiz.UpdatedAt,
-                quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
-            ),
-            quiz.Questions.Select(q => new QuestionResponse(
-                q.Id,
-                q.Text,
-                q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
+            ToResponse(quiz),
+            quiz.Questions.Select(question => new QuestionResponse(
+                question.Id,
+                question.Text,
+                question.AnswerOptions.Select(answer =>
+                    new AnswerOptionResponse(answer.Id, answer.Text, answer.IsCorrect))
             )),
-            comments.Select(c => new CommentResponse(
-                c.Id,
-                c.AuthorId,
-                c.Body,
-                c.CreatedAt,
-                c.UpdatedAt
-            ))
+            comments.Select(comment =>
+                new CommentResponse(comment.Id, comment.AuthorId, comment.Body, comment.CreatedAt, comment.UpdatedAt))
         );
     }
 
-    public async Task<IEnumerable<QuizResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<PagedResult<QuizResponse>> GetPagedAsync(GetQuizzesRequest request, CancellationToken cancellationToken)
     {
-        var quizzes = await quizRepository.GetAllQuizzesAsync(cancellationToken);
+        var result = await quizRepository.GetPagedAsync(request, cancellationToken);
+        var items = result.Items.Select(ToResponse).ToList();
 
-        return quizzes.Select(q => new QuizResponse(
-            q.Id,
-            q.Title,
-            q.Description,
-            q.OwnerId,
-            q.Difficulty,
-            q.CreatedAt,
-            q.UpdatedAt,
-            q.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
-        ));
+        return new PagedResult<QuizResponse>(items, result.Page, result.PageSize, result.TotalCount);
     }
 
     public async Task<QuizResponse> UpdateQuizAsync(
@@ -154,16 +125,8 @@ public class QuizService(
 
         await quizRepository.UpdateAsync(quiz, cancellationToken);
 
-        return new QuizResponse(
-            quiz.Id,
-            quiz.Title,
-            quiz.Description,
-            quiz.OwnerId,
-            quiz.Difficulty,
-            quiz.CreatedAt,
-            quiz.UpdatedAt,
-            quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
-        );
+        return ToResponse(quiz);
+
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -214,10 +177,11 @@ public class QuizService(
         }
         var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
 
-        return questions.Select(q => new QuestionResponse(
-            q.Id,
-            q.Text,
-            q.AnswerOptions.Select(a => new AnswerOptionResponse(a.Id, a.Text, a.IsCorrect))
+        return questions.Select(question => new QuestionResponse(
+            question.Id,
+            question.Text,
+            question.AnswerOptions.Select(answer =>
+                new AnswerOptionResponse(answer.Id, answer.Text, answer.IsCorrect))
         ));
     }
 
@@ -226,4 +190,19 @@ public class QuizService(
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
         return categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug));
     }
-}
+
+    // Private helper to create a QuizResponse
+    private static QuizResponse ToResponse(Quiz quiz)
+    {
+        return new QuizResponse(
+            quiz.Id,
+            quiz.Title,
+            quiz.Description,
+            quiz.OwnerId,
+            quiz.Difficulty,
+            quiz.CreatedAt,
+            quiz.UpdatedAt,
+            quiz.Categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug))
+        );
+    }
+};

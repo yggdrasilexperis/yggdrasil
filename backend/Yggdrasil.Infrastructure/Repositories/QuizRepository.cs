@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
+using Yggdrasil.Application.Contracts.Quiz;
 using Yggdrasil.Domain.Entities;
 using Yggdrasil.Infrastructure.Persistence;
 
@@ -27,10 +29,33 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<List<Quiz>> GetAllQuizzesAsync(CancellationToken cancellationToken)
+    public async Task<PagedResult<Quiz>> GetPagedAsync(
+        GetQuizzesRequest req,
+        CancellationToken cancellationToken)
     {
-        return _dbContext.Quizzes.Include(q => q.Categories)
+        var query = _dbContext.Quizzes.AsNoTracking().Include(q => q.Categories).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(req.CategorySlug))
+            query = query.Where(q => q.Categories.Any(c => c.Slug == req.CategorySlug));
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        IOrderedQueryable<Quiz> ordered = (req.SortBy, req.SortDirection) switch
+        {
+            (QuizSortField.Title, SortDirection.Ascending) =>
+                query.OrderBy(q => q.Title).ThenBy(q => q.Id),
+            (QuizSortField.Title, SortDirection.Descending) =>
+                query.OrderByDescending(q => q.Title).ThenBy(q => q.Id),
+            (QuizSortField.CreatedAt, SortDirection.Ascending) =>
+                query.OrderBy(q => q.CreatedAt).ThenBy(q => q.Id),
+            _ => query.OrderByDescending(q => q.CreatedAt).ThenBy(q => q.Id),
+        };
+
+        var items = await ordered
+            .Skip((req.Page - 1) * req.PageSize)
+            .Take(req.PageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<Quiz>(items, req.Page, req.PageSize, totalCount);
     }
 
     public Task<bool> QuizExistsAsync(Guid quizId, CancellationToken cancellationToken) =>
