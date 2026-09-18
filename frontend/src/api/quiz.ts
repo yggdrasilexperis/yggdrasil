@@ -1,8 +1,8 @@
 import { request } from './client';
-import type { QuizDetail, QuizSummary } from './types';
+import type { PagedResult, QuizDetail, QuizSummary } from './types';
 
-export function listQuizzes(): Promise<QuizSummary[]> {
-  return request<QuizSummary[]>('/api/quizzes/get-all', { authenticated: false });
+export function listQuizzes(): Promise<PagedResult<QuizSummary>> {
+  return request<PagedResult<QuizSummary>>('/api/quizzes', { authenticated: false });
 }
 
 export function getQuizDetail(id: string): Promise<QuizDetail> {

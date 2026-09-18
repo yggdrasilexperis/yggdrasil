@@ -12,7 +12,7 @@ export function DiscoverPage() {
     let cancelled = false;
     listQuizzes()
       .then((data) => {
-        if (!cancelled) setQuizzes(data);
+        if (!cancelled) setQuizzes(data.items);
       })
       .catch(() => {
         if (!cancelled) setError('Could not load quizzes. Try again.');
