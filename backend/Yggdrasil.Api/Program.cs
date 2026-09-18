@@ -18,7 +18,6 @@ builder.Services.AddApiDocumentation();
 
 var app = builder.Build();
 
-
 if (args.Contains("--seed"))
 {
     using var scope = app.Services.CreateScope();
@@ -40,6 +39,7 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapQuizEndpoints();
+app.MapCategoryEndpoints();
 
 app.Run();
 

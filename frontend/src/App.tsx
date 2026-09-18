@@ -5,6 +5,7 @@ import { SignInPage } from './auth/SignInPage';
 import { SignUpPage } from './auth/SignUpPage';
 import { AppLayout } from './layout/AppLayout';
 import { NotFoundPage } from './NotFoundPage';
+import { CreateQuizPage } from './quiz/CreateQuizPage';
 import { DiscoverPage } from './quiz/DiscoverPage';
 import { QuizDetailPage } from './quiz/QuizDetailPage';
 import { QuizEditStub } from './quiz/QuizEditStub';
@@ -24,6 +25,14 @@ function App() {
           element={
             <RequireAuth>
               <QuizEditStub />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="quizzes/new"
+          element={
+            <RequireAuth>
+              <CreateQuizPage />
             </RequireAuth>
           }
         />

@@ -32,8 +32,6 @@ export type ProblemDetails = {
   errors?: Record<string, string[]>;
 };
 
-/** Quiz domain — mirrors backend/Yggdrasil.Application/Contracts/Quiz. Confirm against the OpenAPI doc. */
-
 export type Difficulty = 0 | 1 | 2 | 3;
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
@@ -47,6 +45,13 @@ export type Category = {
   categoryId: string;
   name: string;
   slug: string;
+};
+
+export type CreateQuizRequest = {
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  categoryIds: string[];
 };
 
 export type QuizSummary = {
