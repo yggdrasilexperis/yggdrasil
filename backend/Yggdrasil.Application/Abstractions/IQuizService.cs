@@ -7,10 +7,6 @@ public interface IQuizService
 {
     Task<QuizResponse> CreateQuizAsync(CreateQuizRequest request, CancellationToken cancellationToken);
     Task<QuizContentResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-
-    // ** Deprecated
-    // Task<IEnumerable<QuizResponse>> GetAllAsync(CancellationToken cancellationToken);
-
     Task<PagedResult<QuizResponse>> GetPagedAsync(GetQuizzesRequest request, CancellationToken cancellationToken);
     Task<QuizResponse> UpdateQuizAsync(Guid id, UpdateQuizRequest request, CancellationToken cancellationToken);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);

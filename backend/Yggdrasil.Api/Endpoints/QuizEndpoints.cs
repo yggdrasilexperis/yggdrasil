@@ -25,16 +25,6 @@ public static class QuizEndpoints
         return app;
     }
 
-    // ** Deprecated **
-    // private static async Task<Ok<IEnumerable<QuizResponse>>> GetAll(
-    //     IQuizService service,
-    //     CancellationToken cancellationToken
-    // )
-    // {
-    //     var response = await service.GetAllAsync(cancellationToken);
-    //     return TypedResults.Ok(response);
-    // }
-
     private static async Task<Ok<PagedResult<QuizResponse>>> GetPaged(
         [AsParameters] GetQuizzesRequest request,
         IQuizService quizService,
