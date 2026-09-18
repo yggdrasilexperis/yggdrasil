@@ -89,4 +89,49 @@ public sealed class QuizServiceTests
 
         await _quizRepository.Received(1).DeleteAsync(quiz, Arg.Any<CancellationToken>());
     }
+    
+    [Fact]
+    public async Task UpdateQuizAsync_WhenCallerIsOwner_Succeeds()
+    {
+        var quiz = OwnedQuiz();
+        _quizRepository.GetByQuizIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(quiz);
+        _categoryRepository.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>()).Returns([]);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        var request = new UpdateQuizRequest("New title", "New description", Difficulty.Hard, []);
+
+        await _sut.UpdateQuizAsync(QuizId, request, CancellationToken.None);
+
+        await _quizRepository.Received(1).UpdateAsync(quiz, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateQuizAsync_WhenCallerIsAdminButNotOwner_Succeeds()
+    {
+        var quiz = OwnedQuiz();
+        _quizRepository.GetByQuizIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(quiz);
+        _categoryRepository.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>()).Returns([]);
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        var request = new UpdateQuizRequest("New title", "New description", Difficulty.Hard, []);
+
+        await _sut.UpdateQuizAsync(QuizId, request, CancellationToken.None);
+
+        await _quizRepository.Received(1).UpdateAsync(quiz, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenCallerIsOwner_Succeeds()
+    {
+        var quiz = OwnedQuiz();
+        _quizRepository.GetByQuizIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(quiz);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await _sut.DeleteAsync(QuizId, CancellationToken.None);
+
+        await _quizRepository.Received(1).DeleteAsync(quiz, Arg.Any<CancellationToken>());
+    }
 }

@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+
+using Microsoft.AspNetCore.Identity;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Authentication;
+using Yggdrasil.Domain.Constants;
 
 namespace Yggdrasil.Infrastructure.Identity;
 
@@ -28,6 +31,9 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
             UserName = registerRequest.UserName
         };
         var result = await userManager.CreateAsync(user, registerRequest.Password);
+        
+        if(result.Succeeded)
+            await userManager.AddToRolesAsync(user, [Roles.User]);
 
         return result.Succeeded
             ? new CreateUserResult(Success: true, User: await ToResponseAsync(user), Errors: [])
