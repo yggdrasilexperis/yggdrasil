@@ -11,18 +11,27 @@ namespace Yggdrasil.Application.Services;
 public class QuizService(
     IQuizRepository quizRepository,
     ICategoryRepository categoryRepository,
-        ILogger<QuizService> logger,
-        ICurrentUser currentUser
-    ) : IQuizService
+    ILogger<QuizService> logger,
+    ICurrentUser currentUser
+) : IQuizService
 {
-    public async Task<QuizResponse> CreateQuizAsync(CreateQuizRequest request, CancellationToken cancellationToken)
+    public async Task<QuizResponse> CreateQuizAsync(
+        CreateQuizRequest request,
+        CancellationToken cancellationToken
+    )
     {
-        var categories = await categoryRepository.GetByIdsAsync(request.CategoryIds, cancellationToken);
+        var categories = await categoryRepository.GetByIdsAsync(
+            request.CategoryIds,
+            cancellationToken
+        );
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
             var missing = request.CategoryIds.Except(categories.Select(category => category.Id)).ToList();
             logger.LogWarning("Category list not found for quiz with id {id} not found", missing);
-            throw new BadRequestException("category_not_found", $"Category id(s) not found: {string.Join(", ", missing)}");
+            throw new BadRequestException(
+                "category_not_found",
+                $"Category id(s) not found: {string.Join(", ", missing)}"
+            );
         }
 
         var quiz = new Quiz
@@ -34,14 +43,17 @@ public class QuizService(
             Difficulty = request.Difficulty,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
-            Categories = categories
+            Categories = categories,
         };
         await quizRepository.CreateAsync(quiz, cancellationToken);
 
         return ToResponse(quiz);
     }
 
-    public async Task<QuizContentResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<QuizContentResponse> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken
+    )
     {
         var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
         if (quiz == null)
@@ -73,8 +85,11 @@ public class QuizService(
         return new PagedResult<QuizResponse>(items, result.Page, result.PageSize, result.TotalCount);
     }
 
-
-    public async Task<QuizResponse> UpdateQuizAsync(Guid id, UpdateQuizRequest request, CancellationToken cancellationToken)
+    public async Task<QuizResponse> UpdateQuizAsync(
+        Guid id,
+        UpdateQuizRequest request,
+        CancellationToken cancellationToken
+    )
     {
         var quiz = await quizRepository.GetByQuizIdAsync(id, cancellationToken);
         if (quiz == null)
@@ -87,13 +102,19 @@ public class QuizService(
             throw new ForbiddenException("update this quiz");
         }
 
-        var categories = await categoryRepository.GetByIdsAsync(request.CategoryIds, cancellationToken);
+        var categories = await categoryRepository.GetByIdsAsync(
+            request.CategoryIds,
+            cancellationToken
+        );
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
             var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
 
             logger.LogWarning("Category with id {id} not found", missing);
-            throw new BadRequestException("category_not_found", $"Category id(s) not found: {string.Join(", ", missing)}");
+            throw new BadRequestException(
+                "category_not_found",
+                $"Category id(s) not found: {string.Join(", ", missing)}"
+            );
         }
 
         quiz.Title = request.Title;
@@ -107,7 +128,6 @@ public class QuizService(
         return ToResponse(quiz);
 
     }
-
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -124,7 +144,10 @@ public class QuizService(
         await quizRepository.DeleteAsync(quiz, cancellationToken);
     }
 
-    public async Task<IEnumerable<CommentResponse>> GetCommentsAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IEnumerable<CommentResponse>> GetCommentsAsync(
+        Guid id,
+        CancellationToken cancellationToken
+    )
     {
         var exists = await quizRepository.QuizExistsAsync(id, cancellationToken);
         if (!exists)
@@ -133,10 +156,19 @@ public class QuizService(
         }
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
 
-        return comments.Select(c => new CommentResponse(c.Id, c.AuthorId, c.Body, c.CreatedAt, c.UpdatedAt));
+        return comments.Select(c => new CommentResponse(
+            c.Id,
+            c.AuthorId,
+            c.Body,
+            c.CreatedAt,
+            c.UpdatedAt
+        ));
     }
 
-    public async Task<IEnumerable<QuestionResponse>> GetQuestionsAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IEnumerable<QuestionResponse>> GetQuestionsAsync(
+        Guid id,
+        CancellationToken cancellationToken
+    )
     {
         var exists = await quizRepository.QuizExistsAsync(id, cancellationToken);
         if (!exists)
@@ -152,6 +184,13 @@ public class QuizService(
                 new AnswerOptionResponse(answer.Id, answer.Text, answer.IsCorrect))
         ));
     }
+
+    public async Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken)
+    {
+        var categories = await categoryRepository.GetAllAsync(cancellationToken);
+        return categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug));
+    }
+}
 
     // Private helper to create a QuizResponse
     private static QuizResponse ToResponse(Quiz quiz)

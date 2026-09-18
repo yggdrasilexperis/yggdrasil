@@ -17,6 +17,9 @@ export function AppLayout() {
           <nav className="flex items-center gap-4">
             {user ? (
               <>
+                <Link to="/quizzes/new" className="text-sm">
+                  Create quiz
+                </Link>
                 <span className="text-sm text-muted">{user.userName}</span>
                 <Button variant="utility" onClick={signOut}>
                   Sign out
