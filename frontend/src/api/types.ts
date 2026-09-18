@@ -54,6 +54,15 @@ export type CreateQuizRequest = {
   categoryIds: string[];
 };
 
+/** Envelope the backend wraps every paged list in. */
+export type PagedResult<T> = {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
 export type QuizSummary = {
   id: string;
   title: string;
