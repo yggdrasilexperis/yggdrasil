@@ -190,7 +190,6 @@ public class QuizService(
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
         return categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug));
     }
-}
 
     // Private helper to create a QuizResponse
     private static QuizResponse ToResponse(Quiz quiz)
