@@ -35,9 +35,9 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         if (result.Succeeded)
         {
             result = await userManager.AddToRolesAsync(user, [Roles.User]);
-            
-            // Deletes a user if the role assignment failed, so it doesnt create an invalid user
-            if(!result.Succeeded)
+
+            // Deletes a user if the role assignment failed, so it doesn't create an invalid user
+            if (!result.Succeeded)
                 await userManager.DeleteAsync(user);
         }
 
