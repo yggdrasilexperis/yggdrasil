@@ -42,7 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(id);
   }, [user, signOut]);
 
-  const value = useMemo(() => ({ user, signIn, signUp, signOut }), [user, signIn, signUp, signOut]);
+  const isAdmin = user?.roles.includes('Admin') ?? false;
+
+  const value = useMemo(
+    () => ({ user, isAdmin, signIn, signUp, signOut }),
+    [user, isAdmin, signIn, signUp, signOut],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

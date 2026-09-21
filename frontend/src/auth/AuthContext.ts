@@ -4,6 +4,7 @@ import type { User } from '../api/types';
 
 export type AuthValue = {
   user: User | null;
+  isAdmin: boolean;
   /** Throws ApiError on a failed sign-in; callers render the message. */
   signIn: (email: string, password: string) => Promise<void>;
   /** Registers and signs in — the backend returns a token on 201. Throws ApiError. */
