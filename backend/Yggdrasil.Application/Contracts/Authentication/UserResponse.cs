@@ -3,4 +3,5 @@
 public sealed record UserResponse(
     Guid Id,
     string Email,
-    string UserName);
+    string UserName,
+    IReadOnlyCollection<string> Roles);

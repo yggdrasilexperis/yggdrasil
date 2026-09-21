@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+
+using Microsoft.AspNetCore.Identity;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Authentication;
+using Yggdrasil.Domain.Constants;
 
 namespace Yggdrasil.Infrastructure.Identity;
 
@@ -14,7 +17,7 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
 
         var user = await userManager.FindByEmailAsync(email);
 
-        return user is null ? null : ToResponse(user);
+        return user is null ? null : await ToResponseAsync(user);
     }
 
     public async Task<CreateUserResult> CreateUserAsync(RegisterRequest registerRequest, CancellationToken cancellationToken)
@@ -29,8 +32,17 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         };
         var result = await userManager.CreateAsync(user, registerRequest.Password);
 
+        if (result.Succeeded)
+        {
+            result = await userManager.AddToRolesAsync(user, [Roles.User]);
+
+            // Deletes a user if the role assignment failed, so it doesn't create an invalid user
+            if (!result.Succeeded)
+                await userManager.DeleteAsync(user);
+        }
+
         return result.Succeeded
-            ? new CreateUserResult(Success: true, User: ToResponse(user), Errors: [])
+            ? new CreateUserResult(Success: true, User: await ToResponseAsync(user), Errors: [])
             : new CreateUserResult(
                 Success: false,
                 User: null,
@@ -48,6 +60,8 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
     }
 
     // Private helper
-    private static UserResponse ToResponse(ApplicationUser user)
-        => new(Id: user.Id, Email: user.Email!, UserName: user.UserName!);
+    private async Task<UserResponse> ToResponseAsync(ApplicationUser user)
+        => new(Id: user.Id, Email: user.Email!, UserName: user.UserName!, Roles:
+            [.. await userManager.GetRolesAsync(user)]
+        );
 }
