@@ -13,14 +13,33 @@ public static class QuizEndpoints
     public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("api/quizzes").WithTags("Quizzes");
-        group.MapGet("/", GetPaged).AddEndpointFilter<ValidationFilter<GetQuizzesRequest>>();
+
+        // List quizzes, paged, sortable and filterable by category
+        group.MapGet("/", GetPaged)
+            .AddEndpointFilter<ValidationFilter<GetQuizzesRequest>>();
+
+        // Get one quiz with its content
         group.MapGet("/{id:guid}", GetById);
-        group.MapPost("/create", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
-        group.MapPut("/{id:guid}", Update).RequireAuthorization()
+
+        // Create a quiz owned by the signed-in user
+        group.MapPost("/", Create)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
+
+        // Update a quiz. Owner or admin only
+        group.MapPut("/{id:guid}", Update)
+            .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<UpdateQuizRequest>>();
+
+        // List a quiz's comments
         group.MapGet("/{id:guid}/comments", GetComments);
+
+        // List a quiz's questions
         group.MapGet("/{id:guid}/questions", GetQuestions);
-        group.MapDelete("delete/{id:guid}", Delete).RequireAuthorization();
+
+        // Delete a quiz. Owner or admin only
+        group.MapDelete("/{id:guid}", Delete)
+            .RequireAuthorization();
 
         return app;
     }
