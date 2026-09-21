@@ -37,7 +37,52 @@ internal static class SeedData
         yield return Rap(Of(MusicId), Of(PopCultureId));
         yield return FirstPersonShooters(Of(GamesId));
         yield return ChampionsLeague2025(Of(SportsId));
+
+        // Paging, sorting and filtering are only visible with volume. These carry no questions
+        // of their own — just enough shape (title, one category, a distinct date) to fill pages.
+        // One category each keeps the "two quizzes carry two categories" invariant intact.
+        var owners = new[] { AlvaId, JonasId };
+        for (var i = 0; i < FillerQuizDefinitions.Length; i++)
+        {
+            var (title, description, difficulty, categoryId) = FillerQuizDefinitions[i];
+            yield return new Quiz
+            {
+                Id = new($"0a1b7f2c-0000-4000-8000-{205 + i:D12}"),
+                Title = title,
+                Description = description,
+                Difficulty = difficulty,
+                OwnerId = owners[i % owners.Length],
+                CreatedAt = At.AddDays(-(i + 1)),
+                UpdatedAt = At.AddDays(-(i + 1)),
+                Categories = [Of(categoryId)],
+            };
+        }
     }
+
+    private static readonly (string Title, string Description, Difficulty Difficulty, Guid CategoryId)[]
+        FillerQuizDefinitions =
+        [
+            ("Sitcoms of the 90s", "Must-see TV, laugh tracks included.", Difficulty.Easy, TvShowsId),
+            ("Prestige Drama Openings", "Name the show from its title sequence alone.", Difficulty.Hard, TvShowsId),
+            ("Cartoons We Grew Up With", "Saturday mornings, decoded.", Difficulty.Normal, TvShowsId),
+            ("British Panel Shows", "Dry wit and improvised chaos.", Difficulty.Expert, TvShowsId),
+            ("One-Hit Wonders", "They charted once and never again.", Difficulty.Easy, MusicId),
+            ("Guitar Riffs 101", "Name the song from four bars.", Difficulty.Normal, MusicId),
+            ("Boy Bands vs Girl Groups", "The chart wars of three decades.", Difficulty.Hard, MusicId),
+            ("Vinyl Only", "Deep cuts for record-collection nerds.", Difficulty.Expert, MusicId),
+            ("Retro Arcade Classics", "Quarters, joysticks, high scores.", Difficulty.Easy, GamesId),
+            ("Speedrunning Basics", "Glitches, skips and frame-perfect tricks.", Difficulty.Hard, GamesId),
+            ("Indie Darlings of the 2010s", "Small teams, big impact.", Difficulty.Normal, GamesId),
+            ("Boss Fight Trivia", "The fights that made you rage-quit.", Difficulty.Expert, GamesId),
+            ("Olympic Moments", "Gold, drama and the odd scandal.", Difficulty.Normal, SportsId),
+            ("World Cup Upsets", "When the favourite went home early.", Difficulty.Hard, SportsId),
+            ("Tennis Grand Slams", "Centre Court's biggest names.", Difficulty.Easy, SportsId),
+            ("Formula 1 Legends", "From the pit lane to the podium.", Difficulty.Expert, SportsId),
+            ("Internet Meme History", "From forums to the front page.", Difficulty.Easy, PopCultureId),
+            ("Red Carpet Fashion", "The looks everyone talked about.", Difficulty.Normal, PopCultureId),
+            ("Viral Dance Crazes", "If you know, your feed remembers.", Difficulty.Easy, PopCultureId),
+            ("Celebrity Cameos", "Blink and you missed them.", Difficulty.Hard, PopCultureId),
+        ];
 
     private static Quiz GameOfThrones(params Category[] categories) =>
         new()
