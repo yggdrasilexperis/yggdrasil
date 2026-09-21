@@ -60,7 +60,7 @@ public static class QuizEndpoints
         CancellationToken cancellationToken)
     {
         var response = await quizService.CreateQuizAsync(request, cancellationToken);
-        return TypedResults.Created((string?)null, response);
+        return TypedResults.Created($"/api/quizzes/{response.Id}", response);
     }
 
     private static async Task<Ok<QuizContentResponse>> GetById(
