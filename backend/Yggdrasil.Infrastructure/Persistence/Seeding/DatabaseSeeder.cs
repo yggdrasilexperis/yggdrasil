@@ -14,11 +14,6 @@ public class DatabaseSeeder(YggdrasilDbContext db) : IDatabaseSeeder
     {
         if (await db.Users.AnyAsync(u => u.Id == SeedData.AlvaId, ct)) return;
 
-        db.Roles.AddRange(
-            new IdentityRole<Guid> { Id = SeedData.AdminRoleId, Name = "Admin", NormalizedName = "ADMIN" },
-            new IdentityRole<Guid> { Id = SeedData.UserRoleId, Name = "User", NormalizedName = "USER" }
-            );
-
         var alva = CreateUser(SeedData.AlvaId, "alva", "alva@example.com");
         var jonas = CreateUser(SeedData.JonasId, "jonas", "jonas@example.com");
         var admin = CreateUser(SeedData.AdminId, "admin", "admin@example.com");

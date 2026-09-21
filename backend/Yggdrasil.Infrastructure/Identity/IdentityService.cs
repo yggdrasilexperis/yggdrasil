@@ -31,9 +31,15 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
             UserName = registerRequest.UserName
         };
         var result = await userManager.CreateAsync(user, registerRequest.Password);
-        
-        if(result.Succeeded)
-            await userManager.AddToRolesAsync(user, [Roles.User]);
+
+        if (result.Succeeded)
+        {
+            result = await userManager.AddToRolesAsync(user, [Roles.User]);
+            
+            // Deletes a user if the role assignment failed, so it doesnt create an invalid user
+            if(!result.Succeeded)
+                await userManager.DeleteAsync(user);
+        }
 
         return result.Succeeded
             ? new CreateUserResult(Success: true, User: await ToResponseAsync(user), Errors: [])

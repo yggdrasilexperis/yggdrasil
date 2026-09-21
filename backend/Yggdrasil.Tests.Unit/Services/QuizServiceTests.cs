@@ -5,11 +5,11 @@ using NSubstitute;
 using Shouldly;
 
 using Yggdrasil.Application.Abstractions;
+using Yggdrasil.Application.Contracts;
 using Yggdrasil.Application.Contracts.Quiz;
 using Yggdrasil.Application.Exceptions;
 using Yggdrasil.Application.Services;
 using Yggdrasil.Domain.Constants;
-using Yggdrasil.Application.Contracts;
 using Yggdrasil.Domain.Entities;
 using Yggdrasil.Domain.Enums;
 
