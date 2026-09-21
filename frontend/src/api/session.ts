@@ -29,7 +29,11 @@ export function getSession(): Session | null {
     return null;
   }
 
-  if (!session.token || Date.parse(session.expiresAt) <= Date.now()) {
+  if (
+    !session.token ||
+    !Array.isArray(session.user?.roles) ||
+    Date.parse(session.expiresAt) <= Date.now()
+  ) {
     clearSession();
     return null;
   }
