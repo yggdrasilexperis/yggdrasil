@@ -12,7 +12,7 @@ import { CommentSection } from '../components/CommentSection';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const [detail, setDetail] = useState<QuizDetail | null>(null);
@@ -81,7 +81,7 @@ export function QuizDetailPage() {
   }
 
   const { quiz, questions } = detail;
-  const isOwner = user?.id === quiz.ownerId;
+  const canManage = user?.id === quiz.ownerId || isAdmin;
   const comments = [...detail.comments, ...localComments];
 
   return (
@@ -96,7 +96,7 @@ export function QuizDetailPage() {
           )}
         </div>
 
-        {isOwner && (
+        {canManage && (
           <div className="mt-4 flex gap-3">
             <Link to={`/quizzes/${quiz.id}/edit`}>
               <Button variant="secondary">Edit</Button>
