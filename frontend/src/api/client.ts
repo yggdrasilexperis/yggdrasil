@@ -52,8 +52,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     // fetch only rejects on network/CORS failure, never on a 4xx/5xx.
     throw new ApiError(
       0,
-      'Could not reach the server',
-      'The API did not respond. Check that it is running.',
+      'Connection problem',
+      "We couldn't connect. Check your internet connection and try again",
     );
   }
 
