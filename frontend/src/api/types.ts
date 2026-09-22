@@ -55,6 +55,9 @@ export type CreateQuizRequest = {
   categoryIds: string[];
 };
 
+/** PUT replaces the whole quiz, so it carries the same fields as create. */
+export type UpdateQuizRequest = CreateQuizRequest;
+
 /** Envelope the backend wraps every paged list in. */
 export type PagedResult<T> = {
   items: T[];
