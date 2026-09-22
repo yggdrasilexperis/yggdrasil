@@ -27,7 +27,9 @@ public class QuizService(
         );
         if (categories.Count != request.CategoryIds.Distinct().Count())
         {
-            var missing = request.CategoryIds.Except(categories.Select(category => category.Id)).ToList();
+            var missing = request
+                .CategoryIds.Except(categories.Select(category => category.Id))
+                .ToList();
             logger.LogWarning("Category list not found for quiz with id {id} not found", missing);
             throw new BadRequestException(
                 "category_not_found",
@@ -67,23 +69,31 @@ public class QuizService(
 
         return new QuizContentResponse(
             ToResponse(quiz),
-            quiz.Questions.Select(question => new QuestionResponse(
-                question.Id,
-                question.Text,
-                question.AnswerOptions.Select(answer =>
-                    new AnswerOptionResponse(answer.Id, answer.Text, answer.IsCorrect))
-            )),
-            comments.Select(comment =>
-                new CommentResponse(comment.Id, comment.AuthorId, comment.Body, comment.CreatedAt, comment.UpdatedAt))
+            quiz.Questions.Select(ToResponse),
+            comments.Select(comment => new CommentResponse(
+                comment.Id,
+                comment.AuthorId,
+                comment.Body,
+                comment.CreatedAt,
+                comment.UpdatedAt
+            ))
         );
     }
 
-    public async Task<PagedResult<QuizResponse>> GetPagedAsync(GetQuizzesRequest request, CancellationToken cancellationToken)
+    public async Task<PagedResult<QuizResponse>> GetPagedAsync(
+        GetQuizzesRequest request,
+        CancellationToken cancellationToken
+    )
     {
         var result = await quizRepository.GetPagedAsync(request, cancellationToken);
         var items = result.Items.Select(ToResponse).ToList();
 
-        return new PagedResult<QuizResponse>(items, result.Page, result.PageSize, result.TotalCount);
+        return new PagedResult<QuizResponse>(
+            items,
+            result.Page,
+            result.PageSize,
+            result.TotalCount
+        );
     }
 
     public async Task<QuizResponse> UpdateQuizAsync(
@@ -127,7 +137,6 @@ public class QuizService(
         await quizRepository.UpdateAsync(quiz, cancellationToken);
 
         return ToResponse(quiz);
-
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -178,18 +187,94 @@ public class QuizService(
         }
         var questions = await quizRepository.GetQuestionsByQuizIdAsync(id, cancellationToken);
 
-        return questions.Select(question => new QuestionResponse(
-            question.Id,
-            question.Text,
-            question.AnswerOptions.Select(answer =>
-                new AnswerOptionResponse(answer.Id, answer.Text, answer.IsCorrect))
-        ));
+        return questions.Select(ToResponse);
     }
 
-    public async Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken)
+    public async Task<QuestionResponse> AddQuestionAsync(
+        Guid quizId,
+        CreateQuestionRequest request,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureCanModifyAsync(quizId, "add questions to this quiz", cancellationToken);
+
+        var question = new Question
+        {
+            Id = Guid.NewGuid(),
+            QuizId = quizId,
+            Text = request.Text,
+            CreatedAt = DateTimeOffset.UtcNow,
+            AnswerOptions = request
+                .AnswerOptions.Select(option => new AnswerOption
+                {
+                    Id = Guid.NewGuid(),
+                    Text = option.Text,
+                    IsCorrect = option.IsCorrect,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                })
+                .ToList(),
+        };
+
+        await quizRepository.AddQuestionAsync(question, cancellationToken);
+
+        return ToResponse(question);
+    }
+
+    public async Task DeleteQuestionAsync(
+        Guid quizId,
+        Guid questionId,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureCanModifyAsync(quizId, "delete questions from this quiz", cancellationToken);
+
+        var question = await quizRepository.GetQuestionAsync(quizId, questionId, cancellationToken);
+        if (question == null)
+        {
+            logger.LogWarning("Question with id {id} not found", questionId);
+            throw new NotFoundException("Question", questionId);
+        }
+
+        await quizRepository.DeleteQuestionAsync(question, cancellationToken);
+    }
+
+    public async Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(
+        CancellationToken cancellationToken
+    )
     {
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
         return categories.Select(c => new CategoryResponse(c.Id, c.Name, c.Slug));
+    }
+
+    private async Task EnsureCanModifyAsync(
+        Guid quizId,
+        string action,
+        CancellationToken cancellationToken
+    )
+    {
+        var ownerId = await quizRepository.GetOwnerIdAsync(quizId, cancellationToken);
+        if (ownerId == null)
+        {
+            logger.LogWarning("Quiz with id {id} not found", quizId);
+            throw new NotFoundException("Quiz", quizId);
+        }
+        if (ownerId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
+        {
+            throw new ForbiddenException(action);
+        }
+    }
+
+    private static QuestionResponse ToResponse(Question question)
+    {
+        return new QuestionResponse(
+            question.Id,
+            question.Text,
+            question.AnswerOptions.Select(answer => new AnswerOptionResponse(
+                answer.Id,
+                answer.Text,
+                answer.IsCorrect
+            ))
+        );
     }
 
     // Private helper to create a QuizResponse
