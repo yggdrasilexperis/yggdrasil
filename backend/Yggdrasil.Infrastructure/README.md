@@ -28,6 +28,7 @@ DependencyInjection.cs   one AddInfrastructure(config) extension method
 
 ## Rules
 
+- Deleting a quiz cascedes to its questions and comments. A question cascedes to its answer options. OwnerId is Restrict to not delete quizzes that a user created if that user is deleted.
 - **Migrations are append-only.** Once a migration has been applied and pushed,
   never edit it — add a new one. Editing an applied migration breaks every
   teammate's database and the deployed one.
