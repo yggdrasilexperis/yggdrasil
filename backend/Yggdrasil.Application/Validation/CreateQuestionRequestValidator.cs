@@ -23,13 +23,16 @@ public sealed class CreateQuestionRequestValidator : AbstractValidator<CreateQue
             .Must(options => options.Any(option => option is { IsCorrect: true }))
             .WithMessage("At least one answer option must be correct");
 
-        RuleForEach(request => request.AnswerOptions).ChildRules(option =>
-        {
-            option.RuleFor(answerOption => answerOption.Text)
-                .NotEmpty()
-                .WithMessage("Answer option text is required")
-                .MaximumLength(500)
-                .WithMessage("Answer option text must be 500 characters or fewer");
-        });
+        RuleForEach(request => request.AnswerOptions)
+            .NotNull()
+            .WithMessage("Answer option cannot be null")
+            .ChildRules(option =>
+            {
+                option.RuleFor(answerOption => answerOption.Text)
+                    .NotEmpty()
+                    .WithMessage("Answer option text is required")
+                    .MaximumLength(500)
+                    .WithMessage("Answer option text must be 500 characters or fewer");
+            });
     }
 }
