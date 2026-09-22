@@ -13,14 +13,26 @@ public static class QuizEndpoints
     public static IEndpointRouteBuilder MapQuizEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("api/quizzes").WithTags("Quizzes");
-        group.MapGet("/", GetPaged).AddEndpointFilter<ValidationFilter<GetQuizzesRequest>>();
+
+        group.MapGet("/", GetPaged)
+            .AddEndpointFilter<ValidationFilter<GetQuizzesRequest>>();
+
         group.MapGet("/{id:guid}", GetById);
-        group.MapPost("/create", Create).RequireAuthorization().AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
-        group.MapPut("/{id:guid}", Update).RequireAuthorization()
+
+        group.MapPost("/", Create)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<CreateQuizRequest>>();
+
+        group.MapPut("/{id:guid}", Update)
+            .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<UpdateQuizRequest>>();
+
         group.MapGet("/{id:guid}/comments", GetComments);
+
         group.MapGet("/{id:guid}/questions", GetQuestions);
-        group.MapDelete("delete/{id:guid}", Delete).RequireAuthorization();
+
+        group.MapDelete("/{id:guid}", Delete)
+            .RequireAuthorization();
 
         return app;
     }
@@ -41,7 +53,7 @@ public static class QuizEndpoints
         CancellationToken cancellationToken)
     {
         var response = await quizService.CreateQuizAsync(request, cancellationToken);
-        return TypedResults.Created((string?)null, response);
+        return TypedResults.Created($"/api/quizzes/{response.Id}", response);
     }
 
     private static async Task<Ok<QuizContentResponse>> GetById(

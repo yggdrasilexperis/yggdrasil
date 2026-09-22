@@ -11,5 +11,5 @@ export function getQuizDetail(id: string): Promise<QuizDetail> {
 
 /** Backend enforces ownership too (403 if you're not the owner) — this call is UX, not the guard. */
 export function deleteQuiz(id: string): Promise<void> {
-  return request<void>(`/api/quizzes/delete/${id}`, { method: 'DELETE' });
+  return request<void>(`/api/quizzes/${id}`, { method: 'DELETE' });
 }
