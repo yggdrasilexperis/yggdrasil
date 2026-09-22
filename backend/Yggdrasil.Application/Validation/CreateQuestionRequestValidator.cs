@@ -20,7 +20,7 @@ public sealed class CreateQuestionRequestValidator : AbstractValidator<CreateQue
             .WithMessage("AnswerOptions is required")
             .Must(options => options.Count >= 2)
             .WithMessage("A question needs at least two answer options")
-            .Must(options => options.Any(option => option.IsCorrect))
+            .Must(options => options.Any(option => option is { IsCorrect: true }))
             .WithMessage("At least one answer option must be correct");
 
         RuleForEach(request => request.AnswerOptions).ChildRules(option =>
