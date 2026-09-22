@@ -9,6 +9,7 @@ import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
+import { CategoryEditor } from './CategoryEditor';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export function QuizDetailPage() {
   const [deleting, setDeleting] = useState(false);
   /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [editingCategories, setEditingCategories] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -91,9 +93,16 @@ export function QuizDetailPage() {
         {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
         <div className="mt-3 flex items-center gap-2 text-sm text-muted">
           <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
-          {quiz.categories.length > 0 && (
-            <span>· {quiz.categories.map((c) => c.name).join(', ')}</span>
-          )}
+          {quiz.categories.length > 0 && <span>·</span>}
+          {quiz.categories.map((category) => (
+            <Link
+              key={category.categoryId}
+              to={`/?category=${category.slug}`}
+              className="text-accent"
+            >
+              {category.name}
+            </Link>
+          ))}
         </div>
 
         {canManage && (
@@ -101,9 +110,33 @@ export function QuizDetailPage() {
             <Link to={`/quizzes/${quiz.id}/edit`}>
               <Button variant="secondary">Edit</Button>
             </Link>
+
+            {/* This can later be placed in the Edit page/ component */}
+            <Button
+              variant="secondary"
+              onClick={() => setEditingCategories(true)}
+              disabled={editingCategories}
+            >
+              Edit categories
+            </Button>
+
             <Button variant="utility" onClick={handleDelete} disabled={deleting}>
               {deleting ? 'Deleting…' : 'Delete'}
             </Button>
+          </div>
+        )}
+
+        {/* This can later be placed in the Edit page/ component */}
+        {canManage && editingCategories && (
+          <div className="mt-4">
+            <CategoryEditor
+              quiz={quiz}
+              onSaved={(updated) => {
+                setDetail((prev) => prev && { ...prev, quiz: updated });
+                setEditingCategories(false);
+              }}
+              onCancel={() => setEditingCategories(false)}
+            />
           </div>
         )}
 
