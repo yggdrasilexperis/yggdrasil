@@ -21,9 +21,11 @@ public sealed class QuizServiceTests
     private static readonly Guid OtherUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid AdminId = Guid.Parse("33333333-3333-3333-3333-333333333333");
     private static readonly Guid QuizId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+    private static readonly Guid QuestionId = Guid.Parse("55555555-5555-5555-5555-555555555555");
 
     private readonly IQuizRepository _quizRepository = Substitute.For<IQuizRepository>();
-    private readonly ICategoryRepository _categoryRepository = Substitute.For<ICategoryRepository>();
+    private readonly ICategoryRepository _categoryRepository =
+        Substitute.For<ICategoryRepository>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly QuizService _sut;
 
@@ -37,16 +39,26 @@ public sealed class QuizServiceTests
         );
     }
 
-    private static Quiz OwnedQuiz() => new()
-    {
-        Id = QuizId,
-        Title = "Original title",
-        Description = "Original description",
-        Difficulty = Difficulty.Normal,
-        OwnerId = OwnerId,
-        CreatedAt = DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow,
-    };
+    private static CreateQuestionRequest NewQuestion() =>
+        new(
+            "Capital of Norway?",
+            [
+                new CreateAnswerOptionRequest("Oslo", true),
+                new CreateAnswerOptionRequest("Bergen", false),
+            ]
+        );
+
+    private static Quiz OwnedQuiz() =>
+        new()
+        {
+            Id = QuizId,
+            Title = "Original title",
+            Description = "Original description",
+            Difficulty = Difficulty.Normal,
+            OwnerId = OwnerId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
 
     [Fact]
     public async Task UpdateQuizAsync_WhenCallerIsNotOwner_ThrowsForbidden()
@@ -57,11 +69,13 @@ public sealed class QuizServiceTests
 
         var request = new UpdateQuizRequest("New title", "New description", Difficulty.Hard, []);
 
-        await Should.ThrowAsync<ForbiddenException>(
-            () => _sut.UpdateQuizAsync(QuizId, request, CancellationToken.None)
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.UpdateQuizAsync(QuizId, request, CancellationToken.None)
         );
 
-        await _quizRepository.DidNotReceive().UpdateAsync(Arg.Any<Quiz>(), Arg.Any<CancellationToken>());
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateAsync(Arg.Any<Quiz>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -71,11 +85,13 @@ public sealed class QuizServiceTests
         _currentUser.UserId.Returns(OtherUserId);
         _currentUser.IsInRole(Roles.Admin).Returns(false);
 
-        await Should.ThrowAsync<ForbiddenException>(
-            () => _sut.DeleteAsync(QuizId, CancellationToken.None)
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.DeleteAsync(QuizId, CancellationToken.None)
         );
 
-        await _quizRepository.DidNotReceive().DeleteAsync(Arg.Any<Quiz>(), Arg.Any<CancellationToken>());
+        await _quizRepository
+            .DidNotReceive()
+            .DeleteAsync(Arg.Any<Quiz>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -96,7 +112,9 @@ public sealed class QuizServiceTests
     {
         var quiz = OwnedQuiz();
         _quizRepository.GetByQuizIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(quiz);
-        _categoryRepository.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>()).Returns([]);
+        _categoryRepository
+            .GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns([]);
         _currentUser.UserId.Returns(OwnerId);
         _currentUser.IsInRole(Roles.Admin).Returns(false);
 
@@ -112,7 +130,9 @@ public sealed class QuizServiceTests
     {
         var quiz = OwnedQuiz();
         _quizRepository.GetByQuizIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(quiz);
-        _categoryRepository.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>()).Returns([]);
+        _categoryRepository
+            .GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns([]);
         _currentUser.UserId.Returns(AdminId);
         _currentUser.IsInRole(Roles.Admin).Returns(true);
 
@@ -145,7 +165,15 @@ public sealed class QuizServiceTests
             Title = "Existing Quiz",
             Difficulty = Difficulty.Normal,
             OwnerId = Guid.NewGuid(),
-            Categories = [new Category { Id = Guid.NewGuid(), Name = "Games", Slug = "games" }],
+            Categories =
+            [
+                new Category
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Games",
+                    Slug = "games",
+                },
+            ],
         };
         _quizRepository
             .GetPagedAsync(Arg.Any<GetQuizzesRequest>(), Arg.Any<CancellationToken>())
@@ -163,5 +191,128 @@ public sealed class QuizServiceTests
         item.Id.ShouldBe(quiz.Id);
         item.Title.ShouldBe("Existing Quiz");
         item.Categories.ShouldHaveSingleItem().Slug.ShouldBe("games");
+    }
+
+    [Fact]
+    public async Task AddQuestionAsync_WhenQuizDoesNotExist_ThrowsNotFound()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns((Guid?)null);
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.AddQuestionAsync(QuizId, NewQuestion(), CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .AddQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AddQuestionAsync_WhenCallerIsNotOwner_ThrowsForbidden()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.AddQuestionAsync(QuizId, NewQuestion(), CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .AddQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AddQuestionAsync_WhenCallerIsOwner_SavesTheQuestionWithItsAnswerOptions()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        var response = await _sut.AddQuestionAsync(QuizId, NewQuestion(), CancellationToken.None);
+
+        response.Text.ShouldBe("Capital of Norway?");
+        response.AnswerOptions.Count().ShouldBe(2);
+        response.AnswerOptions.ShouldContain(option => option.Text == "Oslo" && option.IsCorrect);
+
+        await _quizRepository
+            .Received(1)
+            .AddQuestionAsync(
+                Arg.Is<Question>(question =>
+                    question.QuizId == QuizId && question.AnswerOptions.Count == 2
+                ),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task AddQuestionAsync_WhenCallerIsAdminButNotOwner_Succeeds()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        await _sut.AddQuestionAsync(QuizId, NewQuestion(), CancellationToken.None);
+
+        await _quizRepository
+            .Received(1)
+            .AddQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteQuestionAsync_WhenCallerIsNotOwner_ThrowsForbidden()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.DeleteQuestionAsync(QuizId, QuestionId, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .DeleteQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteQuestionAsync_WhenTheQuestionBelongsToAnotherQuiz_ThrowsNotFound()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns((Question?)null);
+        _currentUser.UserId.Returns(OwnerId);
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.DeleteQuestionAsync(QuizId, QuestionId, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .DeleteQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteQuestionAsync_WhenCallerIsOwner_Succeeds()
+    {
+        var question = new Question
+        {
+            Id = QuestionId,
+            QuizId = QuizId,
+            Text = "Capital of Norway?",
+        };
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns(question);
+        _currentUser.UserId.Returns(OwnerId);
+
+        await _sut.DeleteQuestionAsync(QuizId, QuestionId, CancellationToken.None);
+
+        await _quizRepository
+            .Received(1)
+            .DeleteQuestionAsync(question, Arg.Any<CancellationToken>());
     }
 }
