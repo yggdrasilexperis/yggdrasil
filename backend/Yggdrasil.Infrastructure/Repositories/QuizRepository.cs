@@ -72,7 +72,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
     {
         return _dbContext.Quizzes
             .Include(q => q.Categories)
-            .Include(q => q.Questions)
+            .Include(q => q.Questions.OrderBy(question => question.CreatedAt))
             .ThenInclude(q => q.AnswerOptions)
             .FirstOrDefaultAsync(q => q.Id == quizId, cancellationToken);
     }
@@ -81,7 +81,30 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         _dbContext.Questions
             .Where(q => q.QuizId == quizId)
             .Include(q => q.AnswerOptions)
+            .OrderBy(q => q.CreatedAt)
             .ToListAsync(cancellationToken);
+
+    public Task<Guid?> GetOwnerIdAsync(Guid quizId, CancellationToken cancellationToken) =>
+        _dbContext.Quizzes
+            .Where(q => q.Id == quizId)
+            .Select(q => (Guid?)q.OwnerId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task AddQuestionAsync(Question question, CancellationToken cancellationToken)
+    {
+        _dbContext.Questions.Add(question);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<Question?> GetQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken) =>
+        _dbContext.Questions
+            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.Id == questionId, cancellationToken);
+
+    public async Task DeleteQuestionAsync(Question question, CancellationToken cancellationToken)
+    {
+        _dbContext.Questions.Remove(question);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 
     public Task<List<Comment>> GetCommentsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken) =>
         _dbContext.Comments

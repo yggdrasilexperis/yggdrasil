@@ -21,5 +21,11 @@ public interface IQuizService
         Guid id,
         CancellationToken cancellationToken
     );
+    Task<QuestionResponse> AddQuestionAsync(
+        Guid quizId,
+        CreateQuestionRequest request,
+        CancellationToken cancellationToken
+    );
+    Task DeleteQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken);
     Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken);
 }
