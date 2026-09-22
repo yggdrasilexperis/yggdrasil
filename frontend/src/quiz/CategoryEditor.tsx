@@ -49,7 +49,7 @@ export function CategoryEditor({ quiz, onSaved, onCancel }: Props) {
     try {
       const updated = await updateQuiz(quiz.id, {
         title: quiz.title,
-        description: quiz.description ?? '',
+        description: quiz.description,
         difficulty: quiz.difficulty,
         categoryIds,
       });

@@ -50,7 +50,7 @@ export type Category = {
 
 export type CreateQuizRequest = {
   title: string;
-  description: string;
+  description: string | null;
   difficulty: Difficulty;
   categoryIds: string[];
 };
