@@ -7,6 +7,7 @@ import { DIFFICULTY_LABELS } from '../api/types';
 import type { Category, Difficulty, QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { CategoryPicker } from './CategoryPicker';
 
 type FieldErrors = {
   title?: string;
@@ -175,7 +176,7 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
         )}
       </div>
 
-      <div>
+      <div className="hidden">
         <label htmlFor={categoriesId} className="mb-2 block text-sm">
           Categories
         </label>
@@ -227,6 +228,13 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
           <p className="mt-2 text-sm text-red-600">{fieldErrors.categoryIds}</p>
         )}
       </div>
+
+      <CategoryPicker
+        categories={categories}
+        selectedIds={categoryIds}
+        onChange={setCategoryIds}
+        error={fieldErrors.categoryIds}
+      />
 
       <Button type="submit" className="self-start" disabled={submitting}>
         {submitting ? 'Saving…' : 'Create quiz'}
