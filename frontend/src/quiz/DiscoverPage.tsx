@@ -3,10 +3,14 @@ import { useEffect, useState } from 'react';
 import { listQuizzes } from '../api/quiz';
 import type { QuizSummary } from '../api/types';
 import { QuizCard } from './QuizCard';
+import { Loading } from '../components/Loading';
+import { ApiError } from '../api/ApiError';
+import { ErrorState } from '../components/ErrorState';
 
 export function DiscoverPage() {
   const [quizzes, setQuizzes] = useState<QuizSummary[] | null>(null);
   const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -14,24 +18,31 @@ export function DiscoverPage() {
       .then((data) => {
         if (!cancelled) setQuizzes(data.items);
       })
-      .catch(() => {
-        if (!cancelled) setError('Could not load quizzes. Try again.');
+      .catch((err) => {
+        if (!cancelled)
+          setError(
+            err instanceof ApiError
+              ? err.detail || err.title
+              : 'Could not load quizzes. Try again.',
+          );
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
+
+  function retry() {
+    setError('');
+    setQuizzes(null);
+    setReloadKey((k) => k + 1);
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <h1 className="font-display text-4xl font-semibold tracking-tight">Discover</h1>
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      {!error && quizzes === null && <p className="text-muted">Loading quizzes…</p>}
+      {error && <ErrorState message={error} onRetry={retry} />}
+      {!error && quizzes === null && <Loading label="Loading quizzes…" />}
       {quizzes?.length === 0 && (
         <p className="text-muted">No quizzes yet. Be the first to create one.</p>
       )}

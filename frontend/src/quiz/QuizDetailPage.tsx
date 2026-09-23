@@ -9,6 +9,8 @@ import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
+import { Loading } from '../components/Loading';
+import { ErrorState } from '../components/ErrorState';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +22,7 @@ export function QuizDetailPage() {
   const [deleting, setDeleting] = useState(false);
   /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -28,13 +31,20 @@ export function QuizDetailPage() {
       .then((data) => {
         if (!cancelled) setDetail(data);
       })
-      .catch(() => {
-        if (!cancelled) setError('Could not load this quiz.');
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof ApiError ? err.detail || err.title : 'Could not load this quiz.');
       });
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadKey]);
+
+  function retry() {
+    setError('');
+    setDetail(null);
+    setReloadKey((k) => k + 1);
+  }
 
   async function handleDelete() {
     if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
@@ -65,9 +75,7 @@ export function QuizDetailPage() {
   if (error && !detail) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12">
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
+        <ErrorState message={error} onRetry={retry} />
       </div>
     );
   }
@@ -75,7 +83,7 @@ export function QuizDetailPage() {
   if (!detail) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12">
-        <p className="text-muted">Loading quiz…</p>
+        <Loading label="Loading quiz…" />
       </div>
     );
   }
@@ -116,6 +124,7 @@ export function QuizDetailPage() {
 
       <div className="flex flex-col gap-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
+        {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
         {questions.map((question, index) => (
           <Card key={question.id} className="flex flex-col gap-3">
             <p className="font-display text-xl font-semibold">
