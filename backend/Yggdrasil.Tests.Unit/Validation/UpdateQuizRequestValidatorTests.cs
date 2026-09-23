@@ -17,12 +17,8 @@ public sealed class UpdateQuizRequestValidatorTests
     public void Validate_WhenACategoryIsGiven_Passes() =>
         _sut.Validate(QuizWith(Guid.NewGuid())).IsValid.ShouldBeTrue();
 
+    /// <summary>QuizService attaches Uncategorized instead, so no category is a valid request.</summary>
     [Fact]
-    public void Validate_WhenCategoryIdsIsEmpty_FailsOnCategoryIds()
-    {
-        var result = _sut.Validate(QuizWith());
-
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(UpdateQuizRequest.CategoryIds));
-    }
+    public void Validate_WhenCategoryIdsIsEmpty_Passes() =>
+        _sut.Validate(QuizWith()).IsValid.ShouldBeTrue();
 }

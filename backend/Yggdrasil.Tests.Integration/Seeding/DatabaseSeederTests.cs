@@ -54,7 +54,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         (await Db.Users.CountAsync()).ShouldBe(3);
         (await Db.Roles.CountAsync()).ShouldBe(2);
         (await Db.UserRoles.CountAsync()).ShouldBe(3);
-        (await Db.Categories.CountAsync()).ShouldBe(5);
+        (await Db.Categories.CountAsync()).ShouldBe(6);
         (await Db.Quizzes.CountAsync()).ShouldBe(24);
         (await Db.Questions.CountAsync()).ShouldBe(16);
         (await Db.AnswerOptions.CountAsync()).ShouldBe(64);
