@@ -66,7 +66,7 @@ export function QuizDetailPage() {
 
   if (error && !detail) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
         <p role="alert" className="text-sm text-red-600">
           {error}
         </p>
@@ -76,7 +76,7 @@ export function QuizDetailPage() {
 
   if (!detail) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
         <p className="text-muted">Loading quiz…</p>
       </div>
     );
@@ -87,7 +87,7 @@ export function QuizDetailPage() {
   const comments = [...detail.comments, ...localComments];
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
       <div>
         <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
         {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
