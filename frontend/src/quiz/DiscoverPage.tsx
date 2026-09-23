@@ -1,27 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { listQuizzes } from '../api/quiz';
 import { getCategories } from '../api/quizzes';
 import type { Category, QuizSummary } from '../api/types';
+import { CategoryFilter } from './CategoryFilter';
 import { QuizCard } from './QuizCard';
 
-const chip = (active: boolean) =>
-  `flex h-10 items-center rounded-control border px-4 transition-transform active:scale-95 ${
-    active ? 'border-accent text-accent' : 'border-hairline'
-  }`;
-
 export function DiscoverPage() {
-  /** The filter lives in the URL (`/?category=music`) so it survives a refresh and can be linked to. */
-  const [searchParams] = useSearchParams();
-  const categorySlug = searchParams.get('category') ?? '';
+  /** The filter lives in the URL (`/?category=music&category=games`) so it can be linked. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.toString();
+  const selected = useMemo(() => new URLSearchParams(query).getAll('category'), [query]);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [quizzes, setQuizzes] = useState<QuizSummary[] | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Without the filter row the page still works, so a failure here stays silent for now.
+    // Without the filter the page still works, so a failure here stays silent.
     getCategories()
       .then(setCategories)
       .catch(() => {});
@@ -29,7 +26,7 @@ export function DiscoverPage() {
 
   useEffect(() => {
     let cancelled = false;
-    listQuizzes(categorySlug)
+    listQuizzes(selected)
       .then((data) => {
         if (cancelled) return;
         setQuizzes(data.items);
@@ -41,31 +38,20 @@ export function DiscoverPage() {
     return () => {
       cancelled = true;
     };
-  }, [categorySlug]);
+  }, [selected]);
+
+  function handleFilterChange(slugs: string[]) {
+    const params = new URLSearchParams();
+    slugs.forEach((slug) => params.append('category', slug));
+    setSearchParams(params);
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <h1 className="font-display text-4xl font-semibold tracking-tight">Discover</h1>
 
       {categories.length > 0 && (
-        <nav aria-label="Filter by category" className="flex flex-wrap gap-2">
-          <Link to="/" aria-current={!categorySlug || undefined} className={chip(!categorySlug)}>
-            All
-          </Link>
-          {categories.map((category) => {
-            const active = category.slug === categorySlug;
-            return (
-              <Link
-                key={category.categoryId}
-                to={`/?category=${category.slug}`}
-                aria-current={active || undefined}
-                className={chip(active)}
-              >
-                {category.name}
-              </Link>
-            );
-          })}
-        </nav>
+        <CategoryFilter categories={categories} selected={selected} onChange={handleFilterChange} />
       )}
 
       {error && (
@@ -76,8 +62,8 @@ export function DiscoverPage() {
       {!error && quizzes === null && <p className="text-muted">Loading quizzes…</p>}
       {!error && quizzes?.length === 0 && (
         <p className="text-muted">
-          {categorySlug
-            ? 'No quizzes in this category yet.'
+          {selected.length > 0
+            ? 'No quizzes match every category you picked.'
             : 'No quizzes yet. Be the first to create one.'}
         </p>
       )}
