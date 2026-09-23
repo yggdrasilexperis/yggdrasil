@@ -99,7 +99,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
             ("Music 3", BaseDate.AddDays(2), music),
             ("Sports 1", BaseDate.AddDays(3), sports));
 
-        var response = await _client.GetAsync($"{Url}?categorySlug=music&pageSize=2");
+        var response = await _client.GetAsync($"{Url}?categorySlugs=music&pageSize=2");
         var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
 
         page!.TotalCount.ShouldBe(3); // the Sports quiz is excluded from the count too
