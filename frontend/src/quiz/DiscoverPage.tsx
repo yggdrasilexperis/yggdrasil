@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { ApiError } from '../api/ApiError';
 import { listQuizzes } from '../api/quiz';
 import { getCategories } from '../api/quizzes';
 import type { Category, QuizSummary } from '../api/types';
+import { ErrorState } from '../components/ErrorState';
+import { Loading } from '../components/Loading';
 import { CategoryFilter } from './CategoryFilter';
 import { QuizCard } from './QuizCard';
 
@@ -16,6 +19,7 @@ export function DiscoverPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [quizzes, setQuizzes] = useState<QuizSummary[] | null>(null);
   const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     // Without the filter the page still works, so a failure here stays silent.
@@ -32,18 +36,29 @@ export function DiscoverPage() {
         setQuizzes(data.items);
         setError('');
       })
-      .catch(() => {
-        if (!cancelled) setError('Could not load quizzes. Try again.');
+      .catch((err) => {
+        if (!cancelled)
+          setError(
+            err instanceof ApiError
+              ? err.detail || err.title
+              : 'Could not load quizzes. Try again.',
+          );
       });
     return () => {
       cancelled = true;
     };
-  }, [selected]);
+  }, [selected, reloadKey]);
 
   function handleFilterChange(slugs: string[]) {
     const params = new URLSearchParams();
     slugs.forEach((slug) => params.append('category', slug));
     setSearchParams(params);
+  }
+
+  function retry() {
+    setError('');
+    setQuizzes(null);
+    setReloadKey((k) => k + 1);
   }
 
   return (
@@ -54,12 +69,8 @@ export function DiscoverPage() {
         <CategoryFilter categories={categories} selected={selected} onChange={handleFilterChange} />
       )}
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      {!error && quizzes === null && <p className="text-muted">Loading quizzes…</p>}
+      {error && <ErrorState message={error} onRetry={retry} />}
+      {!error && quizzes === null && <Loading label="Loading quizzes…" />}
       {!error && quizzes?.length === 0 && (
         <p className="text-muted">
           {selected.length > 0
