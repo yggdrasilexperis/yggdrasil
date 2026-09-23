@@ -37,7 +37,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     public async Task GetQuizzes_WithNoQueryString_ReturnsFirstPageAtTheDefaultSizeWithTotalCount()
     {
         await SeedQuizzesAsync(Enumerable.Range(1, 15)
-            .Select(i => ($"Quiz {i:00}", BaseDate.AddDays(i), (Category?)null))
+            .Select(i => ($"Quiz {i:00}", BaseDate.AddDays(i), (Category[])[]))
             .ToArray());
 
         var response = await _client.GetAsync(Url);
@@ -55,7 +55,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     public async Task GetQuizzes_WithPageAndPageSize_ReturnsTheRequestedSlice()
     {
         await SeedQuizzesAsync(Enumerable.Range(1, 15)
-            .Select(i => ($"Quiz {i:00}", BaseDate.AddDays(i), (Category?)null))
+            .Select(i => ($"Quiz {i:00}", BaseDate.AddDays(i), (Category[])[]))
             .ToArray());
 
         var response = await _client.GetAsync($"{Url}?page=2&pageSize=5");
@@ -77,9 +77,9 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     string sortBy, string direction, string[] expected)
     {
         await SeedQuizzesAsync(
-            ("Charlie", BaseDate, null),
-            ("Alpha", BaseDate.AddDays(1), null),
-            ("Bravo", BaseDate.AddDays(2), null));
+            ("Charlie", BaseDate, []),
+            ("Alpha", BaseDate.AddDays(1), []),
+            ("Bravo", BaseDate.AddDays(2), []));
 
         var response = await _client.GetAsync($"{Url}?sortBy={sortBy}&sortDirection={direction}");
         var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
@@ -94,10 +94,10 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
         var sports = new Category { Id = Guid.NewGuid(), Name = "Sports", Slug = "sports", CreatedAt = BaseDate };
 
         await SeedQuizzesAsync(
-            ("Music 1", BaseDate, music),
-            ("Music 2", BaseDate.AddDays(1), music),
-            ("Music 3", BaseDate.AddDays(2), music),
-            ("Sports 1", BaseDate.AddDays(3), sports));
+            ("Music 1", BaseDate, [music]),
+            ("Music 2", BaseDate.AddDays(1), [music]),
+            ("Music 3", BaseDate.AddDays(2), [music]),
+            ("Sports 1", BaseDate.AddDays(3), [sports]));
 
         var response = await _client.GetAsync($"{Url}?categorySlugs=music&pageSize=2");
         var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
@@ -105,6 +105,24 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
         page!.TotalCount.ShouldBe(3); // the Sports quiz is excluded from the count too
         page.Items.Count().ShouldBe(2);
         page.Items.ShouldAllBe(q => q.Categories.Any(c => c.Slug == "music"));
+    }
+
+    [Fact]
+    public async Task GetQuizzes_FilteredByTwoCategories_ReturnsOnlyQuizzesCarryingBoth()
+    {
+        var music = new Category { Id = Guid.NewGuid(), Name = "Music", Slug = "music", CreatedAt = BaseDate };
+        var sports = new Category { Id = Guid.NewGuid(), Name = "Sports", Slug = "sports", CreatedAt = BaseDate };
+
+        await SeedQuizzesAsync(
+            ("Both", BaseDate, [music, sports]),
+            ("Music only", BaseDate.AddDays(1), [music]),
+            ("Sports only", BaseDate.AddDays(2), [sports]));
+
+        var response = await _client.GetAsync($"{Url}?categorySlugs=music&categorySlugs=sports");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
+
+        page!.TotalCount.ShouldBe(1);
+        page.Items.ShouldHaveSingleItem().Title.ShouldBe("Both");
     }
 
     [Theory]
@@ -128,7 +146,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    private async Task SeedQuizzesAsync(params (string Title, DateTimeOffset CreatedAt, Category? Category)[] quizzes)
+    private async Task SeedQuizzesAsync(params (string Title, DateTimeOffset CreatedAt, Category[] Categories)[] quizzes)
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<YggdrasilDbContext>();
@@ -147,10 +165,10 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
             ConcurrencyStamp = Guid.NewGuid().ToString(),
         });
 
-        foreach (var (title, createdAt, category) in quizzes)
+        foreach (var (title, createdAt, categories) in quizzes)
         {
             // Qualified: this file's namespace ends in .Quiz, which shadows the entity type.
-            db.Quizzes.Add(new Yggdrasil.Domain.Entities.Quiz
+            db.Quizzes.Add(new Domain.Entities.Quiz
             {
                 Id = Guid.NewGuid(),
                 Title = title,
@@ -158,7 +176,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
                 OwnerId = OwnerId,
                 CreatedAt = createdAt,
                 UpdatedAt = createdAt,
-                Categories = category is null ? [] : [category],
+                Categories = categories,
             });
         }
 
