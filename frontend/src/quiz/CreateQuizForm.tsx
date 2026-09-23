@@ -16,12 +16,7 @@ type FieldErrors = {
   categoryIds?: string;
 };
 
-function validate(
-  title: string,
-  description: string,
-  difficulty: Difficulty | null,
-  categoryIds: string[],
-): FieldErrors {
+function validate(title: string, description: string, difficulty: Difficulty | null): FieldErrors {
   const errors: FieldErrors = {};
 
   if (!title.trim()) errors.title = 'Title is required';
@@ -31,7 +26,6 @@ function validate(
     errors.description = 'Description must be 2000 characters or fewer';
 
   if (difficulty === null) errors.difficulty = 'Pick a difficulty';
-  if (categoryIds.length === 0) errors.categoryIds = 'Pick at least one category';
 
   return errors;
 }
@@ -62,7 +56,7 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
     event.preventDefault();
     setFormError('');
 
-    const clientErrors = validate(title, description, difficulty, categoryIds);
+    const clientErrors = validate(title, description, difficulty);
     setFieldErrors(clientErrors);
     if (difficulty === null || Object.keys(clientErrors).length > 0) return;
 

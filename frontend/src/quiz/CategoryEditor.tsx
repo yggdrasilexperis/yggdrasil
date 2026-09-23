@@ -39,11 +39,6 @@ export function CategoryEditor({ quiz, onSaved, onCancel }: Props) {
   }, []);
 
   async function handleSave() {
-    if (categoryIds.length === 0) {
-      setError('Pick at least one category');
-      return;
-    }
-
     setError('');
     setSaving(true);
     try {
