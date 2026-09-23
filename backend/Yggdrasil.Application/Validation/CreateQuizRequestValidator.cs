@@ -21,9 +21,5 @@ public sealed class CreateQuizRequestValidator : AbstractValidator<CreateQuizReq
         RuleFor(request => request.Difficulty)
             .IsInEnum()
             .WithMessage("Difficulty must be a valid value");
-
-        RuleFor(request => request.CategoryIds)
-            .NotEmpty()
-            .WithMessage("CategoryIds is required");
     }
 }
