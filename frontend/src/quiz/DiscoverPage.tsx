@@ -14,8 +14,6 @@ export function DiscoverPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setError('');
-    setQuizzes(null);
     listQuizzes()
       .then((data) => {
         if (!cancelled) setQuizzes(data.items);
@@ -33,11 +31,17 @@ export function DiscoverPage() {
     };
   }, [reloadKey]);
 
+  function retry() {
+    setError('');
+    setQuizzes(null);
+    setReloadKey((k) => k + 1);
+  }
+
   return (
     <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <h1 className="font-display text-4xl font-semibold tracking-tight">Discover</h1>
 
-      {error && <ErrorState message={error} onRetry={() => setReloadKey((k) => k + 1)} />}
+      {error && <ErrorState message={error} onRetry={retry} />}
       {!error && quizzes === null && <Loading label="Loading quizzes…" />}
       {quizzes?.length === 0 && (
         <p className="text-muted">No quizzes yet. Be the first to create one.</p>

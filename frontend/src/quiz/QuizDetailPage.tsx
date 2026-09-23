@@ -27,8 +27,6 @@ export function QuizDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setError('');
-    setDetail(null);
     getQuizDetail(id)
       .then((data) => {
         if (!cancelled) setDetail(data);
@@ -41,6 +39,12 @@ export function QuizDetailPage() {
       cancelled = true;
     };
   }, [id, reloadKey]);
+
+  function retry() {
+    setError('');
+    setDetail(null);
+    setReloadKey((k) => k + 1);
+  }
 
   async function handleDelete() {
     if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
@@ -71,7 +75,7 @@ export function QuizDetailPage() {
   if (error && !detail) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12">
-        <ErrorState message={error} onRetry={() => setReloadKey((k) => k + 1)} />
+        <ErrorState message={error} onRetry={retry} />
       </div>
     );
   }
