@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 
 import type { Category } from '../api/types';
+import { UNCATEGORIZED_SLUG } from '../api/types';
 import { Button } from '../components/Button';
 
 type Props = {
@@ -17,7 +18,10 @@ export function CategoryPicker({ categories, selectedIds, onChange, error }: Pro
   const [pendingId, setPendingId] = useState('');
 
   const selected = (categories ?? []).filter((c) => selectedIds.includes(c.categoryId));
-  const available = (categories ?? []).filter((c) => !selectedIds.includes(c.categoryId));
+  // Uncategorized is assigned automatically when nothing is picked, so it is not on offer.
+  const available = (categories ?? []).filter(
+    (c) => !selectedIds.includes(c.categoryId) && c.slug !== UNCATEGORIZED_SLUG,
+  );
 
   const placeholder =
     categories === null
@@ -76,7 +80,7 @@ export function CategoryPicker({ categories, selectedIds, onChange, error }: Pro
                 aria-label={`Remove ${category.name}`}
                 className="flex h-11 w-11 items-center justify-center text-muted transition-transform active:scale-95"
               >
-                x
+                ×
               </button>
             </li>
           ))}

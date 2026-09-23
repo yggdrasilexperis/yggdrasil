@@ -42,6 +42,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   3: 'Expert',
 };
 
+/** The category the backend attaches when a quiz is saved without one. */
+export const UNCATEGORIZED_SLUG = 'uncategorized';
+
 export type Category = {
   categoryId: string;
   name: string;
