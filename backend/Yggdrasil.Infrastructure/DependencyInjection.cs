@@ -26,7 +26,7 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
-                "ConnectionStrings:Postgres is missing. Locally, store it in user secrets (README step 4); "
+                "ConnectionStrings:Postgres is missing. Locally, store it in user secrets; "
                     + "elsewhere, set the ConnectionStrings__Postgres environment variable."
             );
         }
