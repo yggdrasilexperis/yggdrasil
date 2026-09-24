@@ -47,7 +47,8 @@ your own, never commit or share it.
 
 > [!IMPORTANT]
 > **Prerequisite:** `openssl`
->> Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
+>
+> > Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
 
 ```bash
 dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
@@ -59,11 +60,15 @@ dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --proje
 dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
-
-
 **7. Seed database.**
 
+The seed users all get the password you set here.
+
+```bash
+dotnet user-secrets set "Seed:Password" "Password123!" --project backend/Yggdrasil.Api
 ```
+
+```bash
 dotnet run --project backend/Yggdrasil.Api -- --seed
 ```
 

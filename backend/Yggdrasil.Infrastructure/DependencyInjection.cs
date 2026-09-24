@@ -27,6 +27,7 @@ public static class DependencyInjection
         );
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
 
         // AddIdentityCore, NOT AddIdentity: AddIdentity also registers cookie
         // authentication and overwrites DefaultAuthenticateScheme, which turns every

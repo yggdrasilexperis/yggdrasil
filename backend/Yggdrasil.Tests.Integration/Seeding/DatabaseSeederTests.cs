@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -13,6 +14,8 @@ namespace Yggdrasil.Tests.Integration.Seeding;
 
 public sealed class SeededDatabase : IAsyncLifetime
 {
+    public const string Password = "SeedingTestingPassword123!";
+
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder(
         "postgres:17-alpine"
     ).Build();
@@ -26,8 +29,8 @@ public sealed class SeededDatabase : IAsyncLifetime
         await Db.Database.MigrateAsync();
 
         // want to check that seeding isnt duplicated
-        await new DatabaseSeeder(NewContext()).SeedAsync();
-        await new DatabaseSeeder(NewContext()).SeedAsync();
+        await NewSeeder(Password).SeedAsync();
+        await NewSeeder(Password).SeedAsync();
     }
 
     public YggdrasilDbContext NewContext() =>
@@ -36,6 +39,9 @@ public sealed class SeededDatabase : IAsyncLifetime
                 .UseNpgsql(_container.GetConnectionString())
                 .Options
         );
+
+    public DatabaseSeeder NewSeeder(string password) =>
+        new(NewContext(), Options.Create(new SeedOptions { Password = password }));
 
     public async Task DisposeAsync()
     {
@@ -131,15 +137,23 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     }
 
     [Fact]
-    public async Task SeededUsersCanAuthenticateWithTheDocumentedPassword()
+    public async Task SeededUsersCanAuthenticateWithTheConfiguredPassword()
     {
         var alva = await Db.Users.SingleAsync(u => u.NormalizedEmail == "ALVA@EXAMPLE.COM");
         alva.NormalizedUserName.ShouldBe("ALVA");
         alva.SecurityStamp.ShouldNotBeNullOrEmpty();
 
         new PasswordHasher<ApplicationUser>()
-            .VerifyHashedPassword(alva, alva.PasswordHash!, "Password123!")
+            .VerifyHashedPassword(alva, alva.PasswordHash!, SeededDatabase.Password)
             .ShouldBe(PasswordVerificationResult.Success);
+    }
+
+    [Fact]
+    public async Task SeedAsync_WithoutPassword_ThrowsEvenWhenAlreadySeeded()
+    {
+        var seeder = fixture.NewSeeder(password: "");
+
+        await Should.ThrowAsync<InvalidOperationException>(() => seeder.SeedAsync());
     }
 
     [Fact]
