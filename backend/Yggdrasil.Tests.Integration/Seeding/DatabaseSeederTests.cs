@@ -20,7 +20,7 @@ public sealed class SeededDatabase : IAsyncLifetime
 
     public YggdrasilDbContext Db { get; private set; } = null!;
 
-    public const string SeedPassword = "integration-tests-seed-password";
+    public const string SeedPassword = "Integration123!";
 
     public async Task InitializeAsync()
     {
