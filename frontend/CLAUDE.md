@@ -41,20 +41,20 @@ Backend must be running for anything real: `docker compose up -d db` then
 
 **Implemented endpoints** (`src/api/types.ts` mirrors the shapes):
 
-| Route                                      | Who            | Body / query                                       | Returns                                    |
-| ------------------------------------------ | -------------- | -------------------------------------------------- | ------------------------------------------ |
-| `POST /api/auth/register`                  | anyone         | `{ email, userName, password }`                    | 201 `AuthResponse`                         |
-| `POST /api/auth/login`                     | anyone         | `{ email, password }`                              | 200 `AuthResponse`                         |
-| `GET /api/quizzes`                         | anyone         | `?page&pageSize&sortBy&sortDirection&categorySlug` | `PagedResult<QuizSummary>`                 |
-| `GET /api/quizzes/{id}`                    | anyone         | —                                                  | `QuizDetail` (quiz + questions + comments) |
-| `POST /api/quizzes`                        | signed in      | `CreateQuizRequest` (≥ 1 `categoryIds`)            | 201 `QuizSummary`                          |
-| `PUT /api/quizzes/{id}`                    | owner or Admin | same shape as create; replaces the whole quiz      | `QuizSummary`                              |
-| `DELETE /api/quizzes/{id}`                 | owner or Admin | —                                                  | 204                                        |
-| `GET /api/quizzes/{id}/questions`          | anyone         | —                                                  | `Question[]`                               |
-| `POST /api/quizzes/{id}/questions`         | owner or Admin | `{ text, answerOptions }`                          | 201 `Question`                             |
-| `DELETE /api/quizzes/{id}/questions/{qid}` | owner or Admin | —                                                  | 204                                        |
-| `GET /api/quizzes/{id}/comments`           | anyone         | —                                                  | `Comment[]`                                |
-| `GET /api/categories`                      | anyone         | —                                                  | `Category[]` (a fixed, seeded list)        |
+| Route                                      | Who            | Body / query                                        | Returns                                    |
+| ------------------------------------------ | -------------- | --------------------------------------------------- | ------------------------------------------ |
+| `POST /api/auth/register`                  | anyone         | `{ email, userName, password }`                     | 201 `AuthResponse`                         |
+| `POST /api/auth/login`                     | anyone         | `{ email, password }`                               | 200 `AuthResponse`                         |
+| `GET /api/quizzes`                         | anyone         | `?page&pageSize&sortBy&sortDirection&categorySlugs` | `PagedResult<QuizSummary>`                 |
+| `GET /api/quizzes/{id}`                    | anyone         | —                                                   | `QuizDetail` (quiz + questions + comments) |
+| `POST /api/quizzes`                        | signed in      | `CreateQuizRequest` (≥ 1 `categoryIds`)             | 201 `QuizSummary`                          |
+| `PUT /api/quizzes/{id}`                    | owner or Admin | same shape as create; replaces the whole quiz       | `QuizSummary`                              |
+| `DELETE /api/quizzes/{id}`                 | owner or Admin | —                                                   | 204                                        |
+| `GET /api/quizzes/{id}/questions`          | anyone         | —                                                   | `Question[]`                               |
+| `POST /api/quizzes/{id}/questions`         | owner or Admin | `{ text, answerOptions }`                           | 201 `Question`                             |
+| `DELETE /api/quizzes/{id}/questions/{qid}` | owner or Admin | —                                                   | 204                                        |
+| `GET /api/quizzes/{id}/comments`           | anyone         | —                                                   | `Comment[]`                                |
+| `GET /api/categories`                      | anyone         | —                                                   | `Category[]` (a fixed, seeded list)        |
 
 `AuthResponse` is `{ token, expiresAt, user }`, and `user` is
 `{ id, email, userName, roles }` with roles `"Admin"` / `"User"`. Auth is a JWT bearer
@@ -133,13 +133,13 @@ Auth and browsing, viewing, creating and deleting quizzes run against the real A
 mocks). Routing, layout and state conventions below are settled — follow them rather than
 re-deciding per page.
 
-| Path                  | Page                                                        | Access        |
-| --------------------- | ----------------------------------------------------------- | ------------- |
-| `/`                   | `quiz/DiscoverPage` — first page of quizzes                 | public        |
-| `/quizzes/:id`        | `quiz/QuizDetailPage` — Edit/Delete shown to owner or admin | public        |
-| `/quizzes/new`        | `quiz/CreateQuizPage`                                       | `RequireAuth` |
-| `/quizzes/:id/edit`   | `quiz/QuizEditStub` — placeholder, editor is its own issue  | `RequireAuth` |
-| `/login`, `/register` | `auth/SignInPage`, `auth/SignUpPage`                        | public        |
+| Path                  | Page                                                                | Access        |
+| --------------------- | ------------------------------------------------------------------- | ------------- |
+| `/`                   | `quiz/DiscoverPage` — paged, sortable, filterable; state in the URL | public        |
+| `/quizzes/:id`        | `quiz/QuizDetailPage` — Edit/Delete shown to owner or admin         | public        |
+| `/quizzes/new`        | `quiz/CreateQuizPage`                                               | `RequireAuth` |
+| `/quizzes/:id/edit`   | `quiz/QuizEditStub` — placeholder, editor is its own issue          | `RequireAuth` |
+| `/login`, `/register` | `auth/SignInPage`, `auth/SignUpPage`                                | public        |
 
 **API client.** `src/api/client.ts` is the single `request()`; per-resource functions sit
 beside it (`auth.ts`, `quiz.ts`, `quizzes.ts` — quiz calls are currently split across the
@@ -147,8 +147,8 @@ last two). `session.ts` persists the token; a 401 on an authenticated call signs
 out through `setSessionExpiredHandler`. Hiding a button with `isAdmin` or an owner check
 is UX only — the backend is the guard.
 
-Known gaps: Discover shows only page 1 (no pager), and comments posted on the detail page
-live in memory until the backend has an endpoint for them.
+Known gap: comments posted on the detail page live in memory until the backend has an
+endpoint for them.
 
 **Routing & layout.** `App.tsx` declares routes with `react-router-dom`; every route
 nests under one `AppLayout` layout route (`src/layout/AppLayout.tsx`) that renders the
