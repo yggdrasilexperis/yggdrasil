@@ -24,8 +24,12 @@ public sealed class GetQuizzesRequestValidator : AbstractValidator<GetQuizzesReq
             .IsInEnum()
             .WithMessage("SortDirection must be a valid value");
 
-        RuleFor(request => request.CategorySlug)
+        RuleFor(request => request.CategorySlugs)
+            .Must(slugs => slugs is null || slugs.Length <= GetQuizzesRequest.MaxCategories)
+            .WithMessage($"At most {GetQuizzesRequest.MaxCategories} categories can be filtered on at once");
+
+        RuleForEach(request => request.CategorySlugs)
             .MaximumLength(GetQuizzesRequest.MaxCategoryChars)
-            .WithMessage($"CategorySlug must be {GetQuizzesRequest.MaxCategoryChars} characters or fewer");
+            .WithMessage($"A category slug must be {GetQuizzesRequest.MaxCategoryChars} characters or fewer");
     }
 }

@@ -1,12 +1,23 @@
 import { request } from './client';
-import type { PagedResult, QuizDetail, QuizSummary } from './types';
+import type { PagedResult, QuizDetail, QuizSummary, UpdateQuizRequest } from './types';
 
-export function listQuizzes(): Promise<PagedResult<QuizSummary>> {
-  return request<PagedResult<QuizSummary>>('/api/quizzes', { authenticated: false });
+/** Quizzes carrying every slug given; no slugs lists them all. */
+export function listQuizzes(categorySlugs: string[] = []): Promise<PagedResult<QuizSummary>> {
+  const params = new URLSearchParams();
+  categorySlugs.forEach((slug) => params.append('categorySlugs', slug));
+  const query = params.toString();
+  return request<PagedResult<QuizSummary>>(`/api/quizzes${query ? `?${query}` : ''}`, {
+    authenticated: false,
+  });
 }
 
 export function getQuizDetail(id: string): Promise<QuizDetail> {
   return request<QuizDetail>(`/api/quizzes/${id}`, { authenticated: false });
+}
+
+/** Backend enforces ownership (403 unless owner or admin) — calling this is UX, not the guard. */
+export function updateQuiz(id: string, quiz: UpdateQuizRequest): Promise<QuizSummary> {
+  return request<QuizSummary>(`/api/quizzes/${id}`, { method: 'PUT', body: quiz });
 }
 
 /** Backend enforces ownership too (403 if you're not the owner) — this call is UX, not the guard. */

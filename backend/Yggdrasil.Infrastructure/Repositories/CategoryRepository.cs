@@ -24,4 +24,9 @@ public class CategoryRepository(YggdrasilDbContext dbContext) : ICategoryReposit
     {
         return await _dbContext.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync(cancellationToken);
     }
+
+    public async Task<Category?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Categories.FirstOrDefaultAsync(c => c.Slug == slug, cancellationToken);
+    }
 }

@@ -42,6 +42,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   3: 'Expert',
 };
 
+/** The category the backend attaches when a quiz is saved without one. */
+export const UNCATEGORIZED_SLUG = 'uncategorized';
+
 export type Category = {
   categoryId: string;
   name: string;
@@ -50,10 +53,13 @@ export type Category = {
 
 export type CreateQuizRequest = {
   title: string;
-  description: string;
+  description: string | null;
   difficulty: Difficulty;
   categoryIds: string[];
 };
+
+/** PUT replaces the whole quiz, so it carries the same fields as create. */
+export type UpdateQuizRequest = CreateQuizRequest;
 
 /** Envelope the backend wraps every paged list in. */
 export type PagedResult<T> = {
