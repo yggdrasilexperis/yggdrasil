@@ -102,8 +102,6 @@ export function DiscoverPage() {
     setReloadKey((k) => k + 1);
   }
 
-  const quizzes = result?.items;
-
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <h1 className="font-display text-4xl font-semibold tracking-tight">Discover</h1>
