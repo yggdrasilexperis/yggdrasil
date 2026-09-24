@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { replace, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
 import { listQuizzes } from '../api/quiz';
