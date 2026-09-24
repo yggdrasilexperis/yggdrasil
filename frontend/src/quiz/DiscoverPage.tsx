@@ -131,8 +131,8 @@ export function DiscoverPage() {
       </div>
 
       {error && <ErrorState message={error} onRetry={retry} />}
-      {!error && quizzes === null && <Loading label="Loading quizzes…" />}
-      {!error && quizzes?.length === 0 && (
+      {!error && result?.items === null && <Loading label="Loading quizzes…" />}
+      {!error && result?.items?.length === 0 && (
         <p className="text-muted">
           {selected.length > 0
             ? 'No quizzes match every category you picked.'
