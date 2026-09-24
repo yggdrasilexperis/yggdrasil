@@ -150,7 +150,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         alva.SecurityStamp.ShouldNotBeNullOrEmpty();
 
         new PasswordHasher<ApplicationUser>()
-            .VerifyHashedPassword(alva, alva.PasswordHash!, "Password123!")
+            .VerifyHashedPassword(alva, alva.PasswordHash!, SeededDatabase.SeedPassword)
             .ShouldBe(PasswordVerificationResult.Success);
     }
 
