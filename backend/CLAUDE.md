@@ -235,9 +235,10 @@ migration via `IdentityRoleConfiguration.HasData`.
 
 **Seeding** — `--seed` runs `DatabaseSeeder` over `SeedData` and exits; it is a
 no-op once the seed users exist. It adds `alva@example.com` and
-`jonas@example.com` (`User`) and `admin@example.com` (`Admin`), all with
-password `Password123!`, plus 5 categories, 24 quizzes and a few comments.
-Categories only exist after `--seed`, and creating a quiz requires one.
+`jonas@example.com` (`User`) and `admin@example.com` (`Admin`), all with the
+password stored in `Seed:Password` (user secrets), plus 5 categories, 24 quizzes
+and a few comments. `--seed` throws if `Seed:Password` is missing. Categories
+only exist after `--seed`, and creating a quiz requires one.
 
 **Tests** — `Tests.Unit` covers services and validators. `Tests.Integration`
 shares one Postgres container per run (`Fixtures/ApiFactory` via
