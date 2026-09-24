@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -19,6 +20,8 @@ public sealed class SeededDatabase : IAsyncLifetime
 
     public YggdrasilDbContext Db { get; private set; } = null!;
 
+    public const string SeedPassword = "integration-tests-seed-password";
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
@@ -26,8 +29,9 @@ public sealed class SeededDatabase : IAsyncLifetime
         await Db.Database.MigrateAsync();
 
         // want to check that seeding isnt duplicated
-        await new DatabaseSeeder(NewContext()).SeedAsync();
-        await new DatabaseSeeder(NewContext()).SeedAsync();
+        var options = Options.Create(new SeedOptions { Password = SeedPassword });
+        await new DatabaseSeeder(NewContext(), options).SeedAsync();
+        await new DatabaseSeeder(NewContext(), options).SeedAsync();
     }
 
     public YggdrasilDbContext NewContext() =>
@@ -47,6 +51,14 @@ public sealed class SeededDatabase : IAsyncLifetime
 public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededDatabase>
 {
     private YggdrasilDbContext Db => fixture.Db;
+
+    [Fact]
+    public async Task RefusesToSeedWithoutAPassword()
+    {
+        var seeder = new DatabaseSeeder(fixture.NewContext(), Options.Create(new SeedOptions()));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => seeder.SeedAsync());
+    }
 
     [Fact]
     public async Task SeedsEveryEntity_AndSeedingTwiceDoesNotDuplicate()
