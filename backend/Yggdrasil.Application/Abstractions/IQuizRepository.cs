@@ -19,5 +19,6 @@ public interface IQuizRepository
     Task<Guid?> GetOwnerIdAsync(Guid quizId, CancellationToken cancellationToken);
     Task AddQuestionAsync(Question question, CancellationToken cancellationToken);
     Task<Question?> GetQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken);
+    Task UpdateQuestionAsync(Question question, CancellationToken cancellationToken);
     Task DeleteQuestionAsync(Question question, CancellationToken cancellationToken);
 }

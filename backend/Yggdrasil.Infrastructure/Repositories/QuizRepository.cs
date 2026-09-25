@@ -102,7 +102,14 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
 
     public Task<Question?> GetQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken) =>
         _dbContext.Questions
+            .Include(q => q.AnswerOptions)
             .FirstOrDefaultAsync(q => q.QuizId == quizId && q.Id == questionId, cancellationToken);
+
+    public async Task UpdateQuestionAsync(Question question, CancellationToken cancellationToken)
+    {
+        _dbContext.AnswerOptions.AddRange(question.AnswerOptions);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task DeleteQuestionAsync(Question question, CancellationToken cancellationToken)
     {

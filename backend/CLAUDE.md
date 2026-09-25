@@ -213,7 +213,7 @@ patterns already in it.
 | `GET api/quizzes/{id}` (quiz + questions + comments), `GET …/{id}/comments`, `GET …/{id}/questions` | anyone |
 | `GET api/categories` | anyone |
 | `POST api/quizzes` | signed in |
-| `PUT`/`DELETE api/quizzes/{id}`, `POST …/{id}/questions`, `DELETE …/{id}/questions/{questionId}` | owner or `Admin` |
+| `PUT`/`DELETE api/quizzes/{id}`, `POST …/{id}/questions`, `PUT`/`DELETE …/{id}/questions/{questionId}` | owner or `Admin`
 
 **Domain** — `Quiz` owns `Question` → `AnswerOption` and `Comment`. `Category`
 is many-to-many with `Quiz` through the `QuizCategories` join table
