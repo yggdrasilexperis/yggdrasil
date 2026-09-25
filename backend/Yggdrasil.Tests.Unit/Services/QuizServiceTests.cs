@@ -530,6 +530,7 @@ public sealed class QuizServiceTests
             );
     }
 
+    [Fact]
     public async Task CreateQuizAsync_WithNoCategories_AttachesUncategorized()
     {
         var uncategorized = new Category
