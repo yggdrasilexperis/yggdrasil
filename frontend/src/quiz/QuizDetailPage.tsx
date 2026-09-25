@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { deleteQuiz, getQuizDetail } from '../api/quiz';
+import { deleteQuiz, getQuizDetail, updateQuiz } from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
 import type { Comment, QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
@@ -12,6 +12,7 @@ import { CommentSection } from '../components/CommentSection';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
 import { CategoryEditor } from './CategoryEditor';
+import { EditQuizForm } from './EditQuizForm';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ export function QuizDetailPage() {
   const [deleting, setDeleting] = useState(false);
   /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [editingQuiz, setEditingQuiz] = useState(false);
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -115,18 +117,22 @@ export function QuizDetailPage() {
 
         {canManage && (
           <div className="mt-4 flex gap-3">
-            <Link to={`/quizzes/${quiz.id}/edit`}>
-              <Button variant="secondary">Edit</Button>
-            </Link>
-
-            {/* This can later be placed in the Edit page/ component */}
-            <Button
-              variant="secondary"
-              onClick={() => setEditingCategories(true)}
-              disabled={editingCategories}
-            >
-              Edit categories
+            <Button variant="secondary" onClick={() => setEditingQuiz(true)} disabled={editingQuiz}>
+              Edit
             </Button>
+
+            {canManage && editingQuiz && (
+              <div>
+                <EditQuizForm
+                  quiz={quiz}
+                  onSaved={(updatedQuiz) => {
+                    setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
+                    setEditingQuiz(false);
+                  }}
+                  onCancel={() => setEditingQuiz(false)}
+                />
+              </div>
+            )}
 
             <Button variant="utility" onClick={handleDelete} disabled={deleting}>
               {deleting ? 'Deleting…' : 'Delete'}
