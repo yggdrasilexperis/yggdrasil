@@ -52,8 +52,21 @@ npm --prefix frontend run lint
 
 ## Secrets
 
-Put secrets in `.env`. Update `.env.example` if necessary
-Locally, you may have to use `dotnet user-secrets` to use secrets in C#
+Never commit a real secret. Each kind of setting has exactly one home:
+
+| Setting | Locally | In the cloud |
+|---|---|---|
+| Postgres container (`POSTGRES_*`) | `.env`, copied from `.env.example` | not used |
+| API: connection string, JWT key, seed password | `dotnet user-secrets --project backend/Yggdrasil.Api` | environment variables, e.g. `ConnectionStrings__Postgres` |
+| Frontend (`VITE_*`) | `frontend/.env`, copied from `frontend/.env.example` | set in the build job |
+| Deployment credentials | – | GitHub Actions secrets |
+
+Add GitHub Actions secrets under **Settings → Secrets and variables → Actions**,
+and reference them in a workflow as `${{ secrets.NAME }}`. Never paste a value
+into a `.yml` file.
+
+Adding a setting? Add it to the matching `.env.example` with a placeholder, and
+make the app fail at startup with a clear message if it is missing.
 
 ## Migrations
 

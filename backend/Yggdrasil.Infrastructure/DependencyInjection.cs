@@ -22,11 +22,19 @@ public static class DependencyInjection
         IConfiguration configuration
     )
     {
-        services.AddDbContext<YggdrasilDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("Postgres"))
-        );
+        var connectionString = configuration.GetConnectionString("Postgres");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "ConnectionStrings:Postgres is missing. Locally, store it in user secrets; "
+                    + "elsewhere, set the ConnectionStrings__Postgres environment variable."
+            );
+        }
+
+        services.AddDbContext<YggdrasilDbContext>(options => options.UseNpgsql(connectionString));
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
 
         // AddIdentityCore, NOT AddIdentity: AddIdentity also registers cookie
         // authentication and overwrites DefaultAuthenticateScheme, which turns every

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using Shouldly;
 
@@ -19,6 +20,8 @@ public sealed class SeededDatabase : IAsyncLifetime
 
     public YggdrasilDbContext Db { get; private set; } = null!;
 
+    public const string SeedPassword = "Integration123!";
+
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
@@ -26,8 +29,9 @@ public sealed class SeededDatabase : IAsyncLifetime
         await Db.Database.MigrateAsync();
 
         // want to check that seeding isnt duplicated
-        await new DatabaseSeeder(NewContext()).SeedAsync();
-        await new DatabaseSeeder(NewContext()).SeedAsync();
+        var options = Options.Create(new SeedOptions { Password = SeedPassword });
+        await new DatabaseSeeder(NewContext(), options).SeedAsync();
+        await new DatabaseSeeder(NewContext(), options).SeedAsync();
     }
 
     public YggdrasilDbContext NewContext() =>
@@ -49,12 +53,20 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     private YggdrasilDbContext Db => fixture.Db;
 
     [Fact]
+    public async Task RefusesToSeedWithoutAPassword()
+    {
+        var seeder = new DatabaseSeeder(fixture.NewContext(), Options.Create(new SeedOptions()));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => seeder.SeedAsync());
+    }
+
+    [Fact]
     public async Task SeedsEveryEntity_AndSeedingTwiceDoesNotDuplicate()
     {
         (await Db.Users.CountAsync()).ShouldBe(3);
         (await Db.Roles.CountAsync()).ShouldBe(2);
         (await Db.UserRoles.CountAsync()).ShouldBe(3);
-        (await Db.Categories.CountAsync()).ShouldBe(5);
+        (await Db.Categories.CountAsync()).ShouldBe(6);
         (await Db.Quizzes.CountAsync()).ShouldBe(24);
         (await Db.Questions.CountAsync()).ShouldBe(16);
         (await Db.AnswerOptions.CountAsync()).ShouldBe(64);
@@ -138,7 +150,7 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
         alva.SecurityStamp.ShouldNotBeNullOrEmpty();
 
         new PasswordHasher<ApplicationUser>()
-            .VerifyHashedPassword(alva, alva.PasswordHash!, "Password123!")
+            .VerifyHashedPassword(alva, alva.PasswordHash!, SeededDatabase.SeedPassword)
             .ShouldBe(PasswordVerificationResult.Success);
     }
 

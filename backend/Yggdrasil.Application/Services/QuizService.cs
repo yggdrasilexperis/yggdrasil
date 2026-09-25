@@ -22,21 +22,7 @@ public class QuizService(
         CancellationToken cancellationToken
     )
     {
-        var categories = await categoryRepository.GetByIdsAsync(
-            request.CategoryIds,
-            cancellationToken
-        );
-        if (categories.Count != request.CategoryIds.Distinct().Count())
-        {
-            var missing = request
-                .CategoryIds.Except(categories.Select(category => category.Id))
-                .ToList();
-            logger.LogWarning("Category list not found for quiz with id {id} not found", missing);
-            throw new BadRequestException(
-                "category_not_found",
-                $"Category id(s) not found: {string.Join(", ", missing)}"
-            );
-        }
+        var categories = await ResolveCategoriesAsync(request.CategoryIds, cancellationToken);
 
         var quiz = new Quiz
         {
@@ -117,20 +103,7 @@ public class QuizService(
             throw new ForbiddenException("update this quiz");
         }
 
-        var categories = await categoryRepository.GetByIdsAsync(
-            request.CategoryIds,
-            cancellationToken
-        );
-        if (categories.Count != request.CategoryIds.Distinct().Count())
-        {
-            var missing = request.CategoryIds.Except(categories.Select(c => c.Id)).ToList();
-
-            logger.LogWarning("Category with id {id} not found", missing);
-            throw new BadRequestException(
-                "category_not_found",
-                $"Category id(s) not found: {string.Join(", ", missing)}"
-            );
-        }
+        var categories = await ResolveCategoriesAsync(request.CategoryIds, cancellationToken);
 
         quiz.Title = request.Title;
         quiz.Description = request.Description;
@@ -344,6 +317,47 @@ public class QuizService(
         {
             throw new ForbiddenException(action);
         }
+    }
+
+    /// <summary>
+    /// Looks the requested categories up, and falls back to Uncategorized when none were asked
+    /// for, so that every quiz stays findable by category.
+    /// </summary>
+    private async Task<List<Category>> ResolveCategoriesAsync(
+        ICollection<Guid> categoryIds,
+        CancellationToken cancellationToken
+    )
+    {
+        if (categoryIds.Count == 0)
+        {
+            var fallback = await categoryRepository.GetBySlugAsync(
+                CategorySlugs.Uncategorized,
+                cancellationToken
+            );
+            if (fallback == null)
+            {
+                logger.LogError("The {slug} category is missing", CategorySlugs.Uncategorized);
+                throw new BadRequestException(
+                    "category_not_found",
+                    $"The '{CategorySlugs.Uncategorized}' category is missing. Seed the database."
+                );
+            }
+
+            return [fallback];
+        }
+
+        var categories = await categoryRepository.GetByIdsAsync(categoryIds, cancellationToken);
+        if (categories.Count != categoryIds.Distinct().Count())
+        {
+            var missing = categoryIds.Except(categories.Select(category => category.Id)).ToList();
+            logger.LogWarning("Category id(s) {ids} not found", missing);
+            throw new BadRequestException(
+                "category_not_found",
+                $"Category id(s) not found: {string.Join(", ", missing)}"
+            );
+        }
+
+        return categories;
     }
 
     private static QuestionResponse ToResponse(Question question)

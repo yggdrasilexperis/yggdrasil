@@ -24,6 +24,11 @@
 }
 
 @layer base {
+  /* Reserve the scrollbar gutter, so a short list does not shift the page sideways. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-white font-sans text-[17px] leading-[1.47] text-ink antialiased;
   }

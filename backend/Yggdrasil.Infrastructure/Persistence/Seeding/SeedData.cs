@@ -1,3 +1,4 @@
+using Yggdrasil.Domain.Constants;
 using Yggdrasil.Domain.Entities;
 using Yggdrasil.Domain.Enums;
 
@@ -19,6 +20,7 @@ internal static class SeedData
     public static readonly Guid GamesId = new("0a1b7f2c-0000-4000-8000-000000000103");
     public static readonly Guid SportsId = new("0a1b7f2c-0000-4000-8000-000000000104");
     public static readonly Guid PopCultureId = new("0a1b7f2c-0000-4000-8000-000000000105");
+    public static readonly Guid UncategorizedId = new("0a1b7f2c-0000-4000-8000-000000000106");
 
     public static IReadOnlyList<Category> Categories() =>
     [
@@ -27,6 +29,7 @@ internal static class SeedData
         new() { Id = GamesId,   Name = "Games",    Slug = "games",    CreatedAt = At },
         new() { Id = SportsId,  Name = "Sports",   Slug = "sports",   CreatedAt = At },
         new() { Id = PopCultureId, Name = "Pop Culture", Slug = "pop-culture", CreatedAt = At },
+        new() { Id = UncategorizedId, Name = "Uncategorized", Slug = CategorySlugs.Uncategorized, CreatedAt = At },
     ];
 
     public static IEnumerable<Quiz> Quizzes(IReadOnlyList<Category> categories)

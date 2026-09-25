@@ -9,6 +9,9 @@ import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
+import { ErrorState } from '../components/ErrorState';
+import { Loading } from '../components/Loading';
+import { CategoryEditor } from './CategoryEditor';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +23,8 @@ export function QuizDetailPage() {
   const [deleting, setDeleting] = useState(false);
   /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [editingCategories, setEditingCategories] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -28,13 +33,20 @@ export function QuizDetailPage() {
       .then((data) => {
         if (!cancelled) setDetail(data);
       })
-      .catch(() => {
-        if (!cancelled) setError('Could not load this quiz.');
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof ApiError ? err.detail || err.title : 'Could not load this quiz.');
       });
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadKey]);
+
+  function retry() {
+    setError('');
+    setDetail(null);
+    setReloadKey((k) => k + 1);
+  }
 
   async function handleDelete() {
     if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
@@ -64,18 +76,16 @@ export function QuizDetailPage() {
 
   if (error && !detail) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
+        <ErrorState message={error} onRetry={retry} />
       </div>
     );
   }
 
   if (!detail) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <p className="text-muted">Loading quiz…</p>
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
+        <Loading label="Loading quiz…" />
       </div>
     );
   }
@@ -85,15 +95,22 @@ export function QuizDetailPage() {
   const comments = [...detail.comments, ...localComments];
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
       <div>
         <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
         {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
         <div className="mt-3 flex items-center gap-2 text-sm text-muted">
           <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
-          {quiz.categories.length > 0 && (
-            <span>· {quiz.categories.map((c) => c.name).join(', ')}</span>
-          )}
+          {quiz.categories.length > 0 && <span>·</span>}
+          {quiz.categories.map((category) => (
+            <Link
+              key={category.categoryId}
+              to={`/?category=${category.slug}`}
+              className="text-accent"
+            >
+              {category.name}
+            </Link>
+          ))}
         </div>
 
         {canManage && (
@@ -101,9 +118,33 @@ export function QuizDetailPage() {
             <Link to={`/quizzes/${quiz.id}/edit`}>
               <Button variant="secondary">Edit</Button>
             </Link>
+
+            {/* This can later be placed in the Edit page/ component */}
+            <Button
+              variant="secondary"
+              onClick={() => setEditingCategories(true)}
+              disabled={editingCategories}
+            >
+              Edit categories
+            </Button>
+
             <Button variant="utility" onClick={handleDelete} disabled={deleting}>
               {deleting ? 'Deleting…' : 'Delete'}
             </Button>
+          </div>
+        )}
+
+        {/* This can later be placed in the Edit page/ component */}
+        {canManage && editingCategories && (
+          <div className="mt-4">
+            <CategoryEditor
+              quiz={quiz}
+              onSaved={(updated) => {
+                setDetail((prev) => prev && { ...prev, quiz: updated });
+                setEditingCategories(false);
+              }}
+              onCancel={() => setEditingCategories(false)}
+            />
           </div>
         )}
 
@@ -116,6 +157,7 @@ export function QuizDetailPage() {
 
       <div className="flex flex-col gap-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
+        {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
         {questions.map((question, index) => (
           <Card key={question.id} className="flex flex-col gap-3">
             <p className="font-display text-xl font-semibold">

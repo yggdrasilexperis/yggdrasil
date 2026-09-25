@@ -23,8 +23,9 @@ npm run format       # prettier --write .
 npm run format:check # what CI enforces
 ```
 
-There is no frontend test suite yet. CI (`.github/workflows/ci.yml`) runs `npm ci` and
-`format:check` only — `lint` is not gated, but keep it clean anyway.
+There is no frontend test suite yet. CI (`.github/workflows/ci.yml`) gates on
+`format:check`, `lint` and `build` (so `tsc` errors fail the PR too). Markdown in this
+folder, this file included, goes through Prettier as well.
 
 Backend must be running for anything real: `docker compose up -d db` then
 `dotnet watch --project backend/Yggdrasil.Api` from the repo root. See the root
@@ -38,15 +39,29 @@ Backend must be running for anything real: `docker compose up -d db` then
 - CORS is an allowlist (`Cors:AllowedOrigins`). A new frontend origin must be added
   backend-side or the browser blocks every request.
 
-**Implemented endpoints** (only these exist so far — quiz endpoints are not built yet):
+**Implemented endpoints** (`src/api/types.ts` mirrors the shapes):
 
-| Route                     | Body                            | Returns                          |
-| ------------------------- | ------------------------------- | -------------------------------- |
-| `POST /api/auth/register` | `{ email, userName, password }` | 201 `{ token, expiresAt, user }` |
-| `POST /api/auth/login`    | `{ email, password }`           | 200 `{ token, expiresAt, user }` |
+| Route                                      | Who            | Body / query                                        | Returns                                    |
+| ------------------------------------------ | -------------- | --------------------------------------------------- | ------------------------------------------ |
+| `POST /api/auth/register`                  | anyone         | `{ email, userName, password }`                     | 201 `AuthResponse`                         |
+| `POST /api/auth/login`                     | anyone         | `{ email, password }`                               | 200 `AuthResponse`                         |
+| `GET /api/quizzes`                         | anyone         | `?page&pageSize&sortBy&sortDirection&categorySlugs` | `PagedResult<QuizSummary>`                 |
+| `GET /api/quizzes/{id}`                    | anyone         | —                                                   | `QuizDetail` (quiz + questions + comments) |
+| `POST /api/quizzes`                        | signed in      | `CreateQuizRequest` (≥ 1 `categoryIds`)             | 201 `QuizSummary`                          |
+| `PUT /api/quizzes/{id}`                    | owner or Admin | same shape as create; replaces the whole quiz       | `QuizSummary`                              |
+| `DELETE /api/quizzes/{id}`                 | owner or Admin | —                                                   | 204                                        |
+| `GET /api/quizzes/{id}/questions`          | anyone         | —                                                   | `Question[]`                               |
+| `POST /api/quizzes/{id}/questions`         | owner or Admin | `{ text, answerOptions }`                           | 201 `Question`                             |
+| `DELETE /api/quizzes/{id}/questions/{qid}` | owner or Admin | —                                                   | 204                                        |
+| `GET /api/quizzes/{id}/comments`           | anyone         | —                                                   | `Comment[]`                                |
+| `GET /api/categories`                      | anyone         | —                                                   | `Category[]` (a fixed, seeded list)        |
 
-`user` is `{ id, email, userName }`. Auth is a JWT bearer token — send it as
-`Authorization: Bearer <token>`.
+`AuthResponse` is `{ token, expiresAt, user }`, and `user` is
+`{ id, email, userName, roles }` with roles `"Admin"` / `"User"`. Auth is a JWT bearer
+token — send it as `Authorization: Bearer <token>`. There is no endpoint for posting
+comments yet. Seed accounts (`alva@example.com`, `jonas@example.com`,
+`admin@example.com`) share the password set in `Seed:Password` when the database was
+seeded (README step 7).
 
 **Errors are always RFC 7807 ProblemDetails**: `{ status, title, detail, instance }`.
 Validation failures (400) add an `errors` extension: `{ [fieldName]: string[] }`.
@@ -115,9 +130,26 @@ need `import type`.
 
 ## Current state
 
-Auth (`/login`, `/register`) and the protected `/` landing are built end-to-end against
-the backend. Routing, layout and state conventions below are settled — follow them
-rather than re-deciding per page.
+Auth and browsing, viewing, creating and deleting quizzes run against the real API (no
+mocks). Routing, layout and state conventions below are settled — follow them rather than
+re-deciding per page.
+
+| Path                  | Page                                                                | Access        |
+| --------------------- | ------------------------------------------------------------------- | ------------- |
+| `/`                   | `quiz/DiscoverPage` — paged, sortable, filterable; state in the URL | public        |
+| `/quizzes/:id`        | `quiz/QuizDetailPage` — Edit/Delete shown to owner or admin         | public        |
+| `/quizzes/new`        | `quiz/CreateQuizPage`                                               | `RequireAuth` |
+| `/quizzes/:id/edit`   | `quiz/QuizEditStub` — placeholder, editor is its own issue          | `RequireAuth` |
+| `/login`, `/register` | `auth/SignInPage`, `auth/SignUpPage`                                | public        |
+
+**API client.** `src/api/client.ts` is the single `request()`; per-resource functions sit
+beside it (`auth.ts`, `quiz.ts`, `quizzes.ts` — quiz calls are currently split across the
+last two). `session.ts` persists the token; a 401 on an authenticated call signs the user
+out through `setSessionExpiredHandler`. Hiding a button with `isAdmin` or an owner check
+is UX only — the backend is the guard.
+
+Known gap: comments posted on the detail page live in memory until the backend has an
+endpoint for them.
 
 **Routing & layout.** `App.tsx` declares routes with `react-router-dom`; every route
 nests under one `AppLayout` layout route (`src/layout/AppLayout.tsx`) that renders the
@@ -126,10 +158,14 @@ own `<header>` or top-level `<main>`. `RequireAuth` gates protected routes and b
 `/login`. An unmatched path renders `NotFoundPage`, not a redirect.
 
 **Components.** Shared, generic primitives (`Button`, `Input`, ...) live in
-`src/components/`. Page components live at the top of `src/` (`Home.tsx`,
-`NotFoundPage.tsx`) or, once a feature has more than one file, in its own folder next to
-the components/hooks only it uses (see `src/auth/`). Pull markup into a component the
-second time it repeats, not the first.
+`src/components/`. Page components live at the top of `src/` (`NotFoundPage.tsx`) or,
+once a feature has more than one file, in its own folder next to the components/hooks
+only it uses (`src/auth/`, `src/quiz/`). Pull markup into a component the second time it
+repeats, not the first.
+
+**Data loading.** Pages fetch in `useEffect` with a `cancelled` flag in the cleanup (see
+`DiscoverPage`). The `react-hooks` lint rules reject a synchronous `setState` in an
+effect body, so set state in the promise callbacks.
 
 **State.** Cross-page state goes through React Context plus a `useX` hook — see
 `AuthContext`/`AuthProvider`/`useAuth`. Reach for this only when more than one page

@@ -8,8 +8,8 @@ const base =
   'disabled:opacity-50 disabled:active:scale-100';
 
 const variants: Record<Variant, string> = {
-  primary: 'min-h-11 bg-accent px-6 py-3 text-white',
-  secondary: 'min-h-11 border border-accent px-6 py-3 text-accent',
+  primary: 'min-h-11 bg-accent px-6 py-2 text-white',
+  secondary: 'min-h-11 border border-accent px-6 py-2 text-accent',
   utility: 'min-h-11 bg-ink px-4 py-2 text-sm text-white',
 };
 

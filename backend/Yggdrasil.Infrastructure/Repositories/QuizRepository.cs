@@ -34,8 +34,12 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         CancellationToken cancellationToken)
     {
         var query = _dbContext.Quizzes.AsNoTracking().Include(q => q.Categories).AsQueryable();
-        if (!string.IsNullOrWhiteSpace(req.CategorySlug))
-            query = query.Where(q => q.Categories.Any(c => c.Slug == req.CategorySlug));
+        var slugs = (req.CategorySlugs ?? [])
+            .Where(slug => !string.IsNullOrWhiteSpace(slug))
+            .Distinct();
+
+        foreach (var slug in slugs)
+            query = query.Where(q => q.Categories.Any(c => c.Slug == slug));
 
         var totalCount = await query.CountAsync(cancellationToken);
 

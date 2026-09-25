@@ -1,12 +1,32 @@
 import { request } from './client';
-import type { PagedResult, QuizDetail, QuizSummary } from './types';
+import type {
+  GetQuizzesRequest,
+  PagedResult,
+  QuizDetail,
+  QuizSummary,
+  UpdateQuizRequest,
+} from './types';
 
-export function listQuizzes(): Promise<PagedResult<QuizSummary>> {
-  return request<PagedResult<QuizSummary>>('/api/quizzes', { authenticated: false });
+/** One page of the quizzes carrying every slug given, in the order asked for. */
+export function listQuizzes(query: GetQuizzesRequest): Promise<PagedResult<QuizSummary>> {
+  const params = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+    sortBy: query.sortBy,
+    sortDirection: query.sortDirection,
+  });
+
+  query.categorySlugs.forEach((slug) => params.append('categorySlugs', slug));
+  return request<PagedResult<QuizSummary>>(`/api/quizzes?${params}`, { authenticated: false });
 }
 
 export function getQuizDetail(id: string): Promise<QuizDetail> {
   return request<QuizDetail>(`/api/quizzes/${id}`, { authenticated: false });
+}
+
+/** Backend enforces ownership (403 unless owner or admin) — calling this is UX, not the guard. */
+export function updateQuiz(id: string, quiz: UpdateQuizRequest): Promise<QuizSummary> {
+  return request<QuizSummary>(`/api/quizzes/${id}`, { method: 'PUT', body: quiz });
 }
 
 /** Backend enforces ownership too (403 if you're not the owner) — this call is UX, not the guard. */

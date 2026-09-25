@@ -42,6 +42,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   3: 'Expert',
 };
 
+/** The category the backend attaches when a quiz is saved without one. */
+export const UNCATEGORIZED_SLUG = 'uncategorized';
+
 export type Category = {
   categoryId: string;
   name: string;
@@ -50,10 +53,38 @@ export type Category = {
 
 export type CreateQuizRequest = {
   title: string;
-  description: string;
+  description: string | null;
   difficulty: Difficulty;
   categoryIds: string[];
 };
+
+/** PUT replaces the whole quiz, so it carries the same fields as create. */
+export type UpdateQuizRequest = CreateQuizRequest;
+
+export type QuizSortField = 'CreatedAt' | 'Title';
+export type SortDirection = 'Ascending' | 'Descending';
+
+/** Query for GET /api/quizzes. Mirrors GetQuizzesRequest; enums go over the wire by name. */
+export type GetQuizzesRequest = {
+  page: number;
+  pageSize: number;
+  sortBy: QuizSortField;
+  sortDirection: SortDirection;
+  categorySlugs: string[];
+};
+
+/** The orders the quiz list offers, keyed by the value kept in the URL. */
+export const QUIZ_SORTS = {
+  newest: { label: 'Newest first', sortBy: 'CreatedAt', sortDirection: 'Descending' },
+  oldest: { label: 'Oldest first', sortBy: 'CreatedAt', sortDirection: 'Ascending' },
+  'title-asc': { label: 'Title A-Z', sortBy: 'Title', sortDirection: 'Ascending' },
+  'title-desc': { label: 'Title Z-A', sortBy: 'Title', sortDirection: 'Descending' },
+} as const satisfies Record<
+  string,
+  { label: string; sortBy: QuizSortField; sortDirection: SortDirection }
+>;
+
+export type QuizSort = keyof typeof QUIZ_SORTS;
 
 /** Envelope the backend wraps every paged list in. */
 export type PagedResult<T> = {

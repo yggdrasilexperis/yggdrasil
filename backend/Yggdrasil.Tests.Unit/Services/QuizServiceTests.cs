@@ -50,6 +50,16 @@ public sealed class QuizServiceTests
             _currentUser,
             _lookUp
         );
+        _categoryRepository
+            .GetBySlugAsync(CategorySlugs.Uncategorized, Arg.Any<CancellationToken>())
+            .Returns(
+                new Category
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Uncategorized",
+                    Slug = CategorySlugs.Uncategorized,
+                }
+            );
     }
 
     private static CreateQuestionRequest NewQuestion() =>
@@ -520,4 +530,40 @@ public sealed class QuizServiceTests
             );
     }
 
+    public async Task CreateQuizAsync_WithNoCategories_AttachesUncategorized()
+    {
+        var uncategorized = new Category
+        {
+            Id = Guid.NewGuid(),
+            Name = "Uncategorized",
+            Slug = CategorySlugs.Uncategorized,
+        };
+        _currentUser.UserId.Returns(OwnerId);
+        _categoryRepository
+            .GetBySlugAsync(CategorySlugs.Uncategorized, Arg.Any<CancellationToken>())
+            .Returns(uncategorized);
+
+        var response = await _sut.CreateQuizAsync(
+            new CreateQuizRequest("Capitals", "Name the capital", Difficulty.Normal, []),
+            CancellationToken.None
+        );
+
+        response.Categories.ShouldHaveSingleItem().Slug.ShouldBe(CategorySlugs.Uncategorized);
+    }
+
+    [Fact]
+    public async Task CreateQuizAsync_WhenUncategorizedIsMissing_ThrowsBadRequest()
+    {
+        _currentUser.UserId.Returns(OwnerId);
+        _categoryRepository
+            .GetBySlugAsync(CategorySlugs.Uncategorized, Arg.Any<CancellationToken>())
+            .Returns((Category?)null);
+
+        await Should.ThrowAsync<BadRequestException>(() =>
+            _sut.CreateQuizAsync(
+                new CreateQuizRequest("Capitals", "Name the capital", Difficulty.Normal, []),
+                CancellationToken.None
+            )
+        );
+    }
 }

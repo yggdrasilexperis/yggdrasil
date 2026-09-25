@@ -7,6 +7,7 @@ import { DIFFICULTY_LABELS } from '../api/types';
 import type { Category, Difficulty, QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { CategoryPicker } from './CategoryPicker';
 
 type FieldErrors = {
   title?: string;
@@ -15,12 +16,7 @@ type FieldErrors = {
   categoryIds?: string;
 };
 
-function validate(
-  title: string,
-  description: string,
-  difficulty: Difficulty | null,
-  categoryIds: string[],
-): FieldErrors {
+function validate(title: string, description: string, difficulty: Difficulty | null): FieldErrors {
   const errors: FieldErrors = {};
 
   if (!title.trim()) errors.title = 'Title is required';
@@ -30,18 +26,15 @@ function validate(
     errors.description = 'Description must be 2000 characters or fewer';
 
   if (difficulty === null) errors.difficulty = 'Pick a difficulty';
-  if (categoryIds.length === 0) errors.categoryIds = 'Pick at least one category';
 
   return errors;
 }
 
 export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) => void }) {
-  const categoriesId = useId();
   const descriptionId = useId();
   const difficultyId = useId();
 
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const [pendingCategoryId, setPendingCategoryId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
@@ -59,21 +52,11 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
       });
   }, []);
 
-  function addCategory() {
-    if (!pendingCategoryId) return;
-    setCategoryIds((ids) => [...ids, pendingCategoryId]);
-    setPendingCategoryId('');
-  }
-
-  function removeCategory(id: string) {
-    setCategoryIds((ids) => ids.filter((x) => x !== id));
-  }
-
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError('');
 
-    const clientErrors = validate(title, description, difficulty, categoryIds);
+    const clientErrors = validate(title, description, difficulty);
     setFieldErrors(clientErrors);
     if (difficulty === null || Object.keys(clientErrors).length > 0) return;
 
@@ -107,16 +90,6 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
 
   const field = (error?: string) =>
     `w-full rounded-control border px-4 ${error ? 'border-red-600' : 'border-hairline'}`;
-
-  const selectedCategories = (categories ?? []).filter((c) => categoryIds.includes(c.categoryId));
-  const availableCategories = (categories ?? []).filter((c) => !categoryIds.includes(c.categoryId));
-
-  const categoryPlaceholder =
-    categories === null
-      ? 'Loading…'
-      : availableCategories.length === 0
-        ? 'No more categories'
-        : 'Choose a category...';
 
   return (
     <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-6">
@@ -175,58 +148,12 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
         )}
       </div>
 
-      <div>
-        <label htmlFor={categoriesId} className="mb-2 block text-sm">
-          Categories
-        </label>
-        <div className="flex gap-2">
-          <select
-            id={categoriesId}
-            value={pendingCategoryId}
-            onChange={(event) => setPendingCategoryId(event.target.value)}
-            disabled={availableCategories.length === 0}
-            aria-invalid={fieldErrors.categoryIds ? true : undefined}
-            className={`${field(fieldErrors.categoryIds)} h-11 bg-white disabled:text-muted`}
-          >
-            <option value="" disabled>
-              {categoryPlaceholder}
-            </option>
-            {availableCategories.map((category) => (
-              <option key={category.categoryId} value={category.categoryId}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <Button variant="secondary" onClick={addCategory} disabled={!pendingCategoryId}>
-            Add
-          </Button>
-        </div>
-
-        {selectedCategories.length > 0 && (
-          <ul aria-label="Selected categories" className="mt-3 flex flex-wrap gap-2">
-            {selectedCategories.map((category) => (
-              <li
-                key={category.categoryId}
-                className="flex items-center rounded-control border border-hairline pl-4"
-              >
-                {category.name}
-                <button
-                  type="button"
-                  onClick={() => removeCategory(category.categoryId)}
-                  aria-label={`Remove ${category.name}`}
-                  className="flex h-11 w-11 items-center justify-center text-muted transition-transform active:scale-95"
-                >
-                  x
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {fieldErrors.categoryIds && (
-          <p className="mt-2 text-sm text-red-600">{fieldErrors.categoryIds}</p>
-        )}
-      </div>
+      <CategoryPicker
+        categories={categories}
+        selectedIds={categoryIds}
+        onChange={setCategoryIds}
+        error={fieldErrors.categoryIds}
+      />
 
       <Button type="submit" className="self-start" disabled={submitting}>
         {submitting ? 'Saving…' : 'Create quiz'}

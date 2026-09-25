@@ -4,6 +4,6 @@ namespace Yggdrasil.Application.Contracts.Quiz;
 
 public record UpdateQuizRequest(
     string Title,
-    string Description,
+    string? Description,
     Difficulty Difficulty,
     ICollection<Guid> CategoryIds);

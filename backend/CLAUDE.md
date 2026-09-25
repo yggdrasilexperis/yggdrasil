@@ -44,6 +44,7 @@ dotnet test backend/Yggdrasil.sln                    # unit + integration
 dotnet test backend/Yggdrasil.Tests.Unit             # fast: mocks only, no Docker
 dotnet format backend/Yggdrasil.sln                  # CI runs this with --verify-no-changes
 dotnet watch --project backend/Yggdrasil.Api         # API on http://localhost:5172
+dotnet run --project backend/Yggdrasil.Api -- --seed # dev data, then exits
 ```
 
 A single test class or a single test (xUnit + VSTest filters):
@@ -56,7 +57,8 @@ dotnet test backend/Yggdrasil.Tests.Unit --filter "FullyQualifiedName~QuizServic
 `dotnet format` takes **no `--exclude`**: CI verifies the whole solution,
 generated migrations included, so a freshly scaffolded migration must be
 formatted before it is committed. Formatting is the one edit a migration is
-allowed to receive.
+allowed to receive. `.githooks/pre-commit` formats staged `.cs` and `frontend/`
+files automatically once enabled with `git config core.hooksPath .githooks`.
 
 The SDK is pinned by `global.json` (10.0.110, `net10.0`).
 `Yggdrasil.Tests.Integration` starts a real PostgreSQL through Testcontainers,
@@ -198,23 +200,60 @@ When asked for a commit message or a PR body, write it in the chat. Do not run
 
 ## Current state
 
-Persistence is wired up and the first migration is applied; the feature layers
-are still empty.
+Auth, quizzes with questions, categories, and owner-or-admin authorization are
+built end to end. Every directory in the table above exists — follow the
+patterns already in it.
 
-- **Infrastructure** has `YggdrasilDbContext`, `ApplicationUser : IdentityUser<Guid>`,
-  `ApplicationUserConfiguration`, `DependencyInjection.AddInfrastructure`, and the
-  `InitialIdentitySchema` migration (Identity tables only — no domain tables yet).
-- **Application** and **Domain** are still `Class1.cs` placeholders. No entities,
-  contracts, services, validators, or repositories exist yet.
-- **Api** `Program.cs` calls `AddInfrastructure` and `AddOpenApi`, but is otherwise
-  the untouched weather-forecast template. No `Endpoints/`, `Extensions/`,
-  `Filters/`, or `Handlers/` folder exists yet.
-- Both test projects hold only the generated `UnitTest1.cs`.
+**Routes** (`Api/Endpoints`, one `XEndpoints` class each):
 
-So the directories in the table above describe the **target** structure — create
-them as features land rather than assuming they are there. `backend/README.md`
-links to `docs/example-slice-auth.md`, which has not been written.
+| Route | Who |
+|---|---|
+| `POST api/auth/register`, `POST api/auth/login` | anyone |
+| `GET api/quizzes` — paged: `page`, `pageSize`, `sortBy`, `sortDirection`, `categorySlug` | anyone |
+| `GET api/quizzes/{id}` (quiz + questions + comments), `GET …/{id}/comments`, `GET …/{id}/questions` | anyone |
+| `GET api/categories` | anyone |
+| `POST api/quizzes` | signed in |
+| `PUT`/`DELETE api/quizzes/{id}`, `POST …/{id}/questions`, `DELETE …/{id}/questions/{questionId}` | owner or `Admin` |
 
-Known noise, not something to fix unprompted: the build warns `NU1903` about a
-high-severity advisory in `Microsoft.OpenApi` 2.0.0, pulled in through
-`Microsoft.AspNetCore.OpenApi`.
+**Domain** — `Quiz` owns `Question` → `AnswerOption` and `Comment`. `Category`
+is many-to-many with `Quiz` through the `QuizCategories` join table
+(`QuizId`, `CategoryId`), configured in `QuizConfiguration`. Categories are a
+fixed list: nothing in the API creates one, quizzes attach existing ones by id.
+`Roles` (`Admin`, `User`) lives in `Domain/Constants`.
+
+**Errors** — Application never names a status code; it throws a subclass of
+`AppException` from `Application/Exceptions` (`BadRequest` 400, `Unauthorized`
+401, `Forbidden` 403, `NotFound` 404, `Conflict` 409).
+`Api/Handlers/GlobalExceptionHandler` turns them into ProblemDetails, and a
+FluentValidation failure from `ValidationFilter<T>` becomes a 400 with an
+`errors` extension. Anything else is a 500.
+
+**Auth** — JWT bearer. Services read the caller through `ICurrentUser`
+(`UserId`, `IsInRole`), implemented in `Api/Identity/CurrentUser`; ownership
+checks live in `QuizService`, never in an endpoint. The two roles are seeded by
+migration via `IdentityRoleConfiguration.HasData`.
+
+**Seeding** — `--seed` runs `DatabaseSeeder` over `SeedData` and exits; it is a
+no-op once the seed users exist. It adds `alva@example.com` and
+`jonas@example.com` (`User`) and `admin@example.com` (`Admin`), all with the
+password stored in `Seed:Password` (user secrets), plus 5 categories, 24 quizzes
+and a few comments. `--seed` throws if `Seed:Password` is missing. Categories
+only exist after `--seed`, and creating a quiz requires one.
+
+**Tests** — `Tests.Unit` covers services and validators. `Tests.Integration`
+shares one Postgres container per run (`Fixtures/ApiFactory` via
+`ApiCollection`); call `factory.ResetAsync()` in `InitializeAsync`. It truncates
+users and categories (cascading to quizzes), so a test seeds the categories it
+needs. `Seeding/DatabaseSeederTests` pins the seed counts — update it when
+`SeedData` changes.
+
+Known quirks — don't fix them unprompted, and don't copy them:
+
+- `FixQuizCategoriesColumns` was hand-written (it has no `.Designer.cs`). It is
+  merged, so leave it; new migrations still come from `dotnet ef`.
+- `QuizService` is registered in `AddInfrastructure`; `AuthService` is in
+  `AddApplication`, which is where application services belong.
+- The root `README.md` runs `dotnet format` with `--exclude …/Migrations`. CI
+  does not, so follow this file.
+- `backend/README.md` links to `docs/example-slice-auth.md`, which has not been
+  written.
