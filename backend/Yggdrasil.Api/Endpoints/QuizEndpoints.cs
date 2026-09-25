@@ -29,6 +29,16 @@ public static class QuizEndpoints
 
         group.MapGet("/{id:guid}/comments", GetComments);
 
+        group.MapPost("/{id:guid}/comments", AddComment)
+            .RequireAuthorization();
+
+        group.MapPut("/{id:guid}/comments", UpdateComment)
+            .RequireAuthorization();
+
+        group.MapDelete("/{id:guid}/comments/{commentId:guid}", DeleteComment)
+            .RequireAuthorization();
+
+
         group.MapGet("/{id:guid}/questions", GetQuestions);
 
         group.MapPost("/{id:guid}/questions", AddQuestion)
@@ -102,6 +112,39 @@ public static class QuizEndpoints
         var response = await quizService.GetCommentsAsync(id, cancellationToken);
         return TypedResults.Ok(response);
     }
+    private static async Task<Created<CommentResponse>> AddComment(
+        Guid id,
+        CreateCommentRequest request,
+        IQuizService quizService,
+        CancellationToken cancellationToken)
+    {
+        var response = await quizService.AddCommentAsync(id, request, cancellationToken);
+
+        return TypedResults.Created($"/api/quizzes/{id}/comments", response);
+    }
+
+    private static async Task<NoContent> DeleteComment(
+        Guid id,
+        Guid commentId,
+        IQuizService quizService,
+        CancellationToken cancellationToken)
+    {
+        await quizService.DeleteCommentAsync(id, commentId, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<CommentResponse>> UpdateComment(
+        Guid id,
+        Guid commentId,
+        UpdateCommentRequest request,
+        IQuizService quizService,
+        CancellationToken cancellationToken)
+    {
+        var response = await quizService.UpdateCommentAsync(id, commentId, request, cancellationToken);
+        return TypedResults.Ok(response);
+    }
+
+
 
     private static async Task<Ok<IEnumerable<QuestionResponse>>> GetQuestions(
         Guid id,
