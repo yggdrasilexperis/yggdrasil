@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { deleteQuiz, getQuizDetail } from '../api/quiz';
+import { deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
 import type { Comment, QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
@@ -25,6 +25,8 @@ export function QuizDetailPage() {
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [removingQuestionId, setRemovingQuestionId] = useState<string | null>(null);
+  const [questionError, setQuestionError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -57,6 +59,24 @@ export function QuizDetailPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.detail || err.title : 'Could not delete this quiz.');
       setDeleting(false);
+    }
+  }
+
+  async function handleRemoveQuestion(questionId: string) {
+    if (!id || !window.confirm('Remove this question?')) return;
+    setQuestionError('');
+    setRemovingQuestionId(questionId);
+    try {
+      await deleteQuestion(id, questionId);
+      setDetail(
+        (prev) => prev && { ...prev, questions: prev.questions.filter((q) => q.id !== questionId) },
+      );
+    } catch (err) {
+      setQuestionError(
+        err instanceof ApiError ? err.detail || err.title : 'Could not remove this question',
+      );
+    } finally {
+      setRemovingQuestionId(null);
     }
   }
 
@@ -157,12 +177,28 @@ export function QuizDetailPage() {
 
       <div className="flex flex-col gap-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
+        {questionError && (
+          <p role="alert" className="text-sm text-red-600">
+            {questionError}
+          </p>
+        )}
         {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
         {questions.map((question, index) => (
           <Card key={question.id} className="flex flex-col gap-3">
-            <p className="font-display text-xl font-semibold">
-              {index + 1}. {question.text}
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <p className="font-display text-xl font-semibold">
+                {index + 1}. {question.text}
+              </p>
+              {canManage && (
+                <Button
+                  variant="utility"
+                  onClick={() => handleRemoveQuestion(question.id)}
+                  disabled={removingQuestionId !== null}
+                >
+                  {removingQuestionId === question.id ? 'Removing...' : 'Remove'}
+                </Button>
+              )}
+            </div>
             <ul className="flex flex-col gap-2">
               {question.answerOptions.map((option) => (
                 <li
