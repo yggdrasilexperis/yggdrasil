@@ -139,7 +139,6 @@ re-deciding per page.
 | `/`                   | `quiz/DiscoverPage` — paged, sortable, filterable; state in the URL | public        |
 | `/quizzes/:id`        | `quiz/QuizDetailPage` — Edit/Delete shown to owner or admin         | public        |
 | `/quizzes/new`        | `quiz/CreateQuizPage`                                               | `RequireAuth` |
-| `/quizzes/:id/edit`   | `quiz/QuizEditStub` — placeholder, editor is its own issue          | `RequireAuth` |
 | `/login`, `/register` | `auth/SignInPage`, `auth/SignUpPage`                                | public        |
 
 **API client.** `src/api/client.ts` is the single `request()`; per-resource functions sit

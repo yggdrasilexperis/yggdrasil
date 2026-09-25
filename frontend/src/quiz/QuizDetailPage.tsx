@@ -13,6 +13,7 @@ import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
 import { AddQuestionForm } from './AddQuestionForm';
 import { CategoryEditor } from './CategoryEditor';
+import { EditQuizForm } from './EditQuizForm';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,7 @@ export function QuizDetailPage() {
   const [deleting, setDeleting] = useState(false);
   /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
   const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [editingQuiz, setEditingQuiz] = useState(false);
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [addingQuestion, setAddingQuestion] = useState(false);
@@ -137,22 +139,26 @@ export function QuizDetailPage() {
 
         {canManage && (
           <div className="mt-4 flex gap-3">
-            <Link to={`/quizzes/${quiz.id}/edit`}>
-              <Button variant="secondary">Edit</Button>
-            </Link>
-
-            {/* This can later be placed in the Edit page/ component */}
-            <Button
-              variant="secondary"
-              onClick={() => setEditingCategories(true)}
-              disabled={editingCategories}
-            >
-              Edit categories
+            <Button variant="secondary" onClick={() => setEditingQuiz(true)} disabled={editingQuiz}>
+              Edit
             </Button>
 
             <Button variant="utility" onClick={handleDelete} disabled={deleting}>
               {deleting ? 'Deleting…' : 'Delete'}
             </Button>
+          </div>
+        )}
+
+        {canManage && editingQuiz && (
+          <div className="mt-4">
+            <EditQuizForm
+              quiz={quiz}
+              onSaved={(updatedQuiz) => {
+                setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
+                setEditingQuiz(false);
+              }}
+              onCancel={() => setEditingQuiz(false)}
+            />
           </div>
         )}
 
