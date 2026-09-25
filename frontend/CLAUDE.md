@@ -60,7 +60,8 @@ Backend must be running for anything real: `docker compose up -d db` then
 `{ id, email, userName, roles }` with roles `"Admin"` / `"User"`. Auth is a JWT bearer
 token — send it as `Authorization: Bearer <token>`. There is no endpoint for posting
 comments yet. Seed accounts (`alva@example.com`, `jonas@example.com`,
-`admin@example.com`) share the password `Password123!`.
+`admin@example.com`) share the password set in `Seed:Password` when the database was
+seeded (README step 7).
 
 **Errors are always RFC 7807 ProblemDetails**: `{ status, title, detail, instance }`.
 Validation failures (400) add an `errors` extension: `{ [fieldName]: string[] }`.

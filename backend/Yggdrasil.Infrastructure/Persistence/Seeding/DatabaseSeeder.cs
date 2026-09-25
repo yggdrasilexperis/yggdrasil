@@ -1,22 +1,32 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Infrastructure.Identity;
 
 namespace Yggdrasil.Infrastructure.Persistence.Seeding;
 
-public class DatabaseSeeder(YggdrasilDbContext db) : IDatabaseSeeder
+public class DatabaseSeeder(YggdrasilDbContext db, IOptions<SeedOptions> options) : IDatabaseSeeder
 {
-    private const string SeedPassword = "Password123!";
-
     public async Task SeedAsync(CancellationToken ct = default)
     {
+        var password = options.Value.Password;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new InvalidOperationException(
+                $"{SeedOptions.SectionName}:{nameof(SeedOptions.Password)} is missing. "
+                    + "Pick a password for the seed users and store it in user secrets:\n"
+                    + "  dotnet user-secrets set \"Seed:Password\" \"<pick one>\" "
+                    + "--project backend/Yggdrasil.Api"
+            );
+        }
+
         if (await db.Users.AnyAsync(u => u.Id == SeedData.AlvaId, ct)) return;
 
-        var alva = CreateUser(SeedData.AlvaId, "alva", "alva@example.com");
-        var jonas = CreateUser(SeedData.JonasId, "jonas", "jonas@example.com");
-        var admin = CreateUser(SeedData.AdminId, "admin", "admin@example.com");
+        var alva = CreateUser(SeedData.AlvaId, "alva", "alva@example.com", password);
+        var jonas = CreateUser(SeedData.JonasId, "jonas", "jonas@example.com", password);
+        var admin = CreateUser(SeedData.AdminId, "admin", "admin@example.com", password);
         db.Users.AddRange(alva, jonas, admin);
 
         db.UserRoles.AddRange(
@@ -33,7 +43,7 @@ public class DatabaseSeeder(YggdrasilDbContext db) : IDatabaseSeeder
         await db.SaveChangesAsync(ct);
     }
 
-    private static ApplicationUser CreateUser(Guid id, string userName, string email)
+    private static ApplicationUser CreateUser(Guid id, string userName, string email, string password)
     {
         var user = new ApplicationUser()
         {
@@ -46,7 +56,7 @@ public class DatabaseSeeder(YggdrasilDbContext db) : IDatabaseSeeder
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
         };
-        user.PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(user, SeedPassword);
+        user.PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(user, password);
         return user;
     }
 }
