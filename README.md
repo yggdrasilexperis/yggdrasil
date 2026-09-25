@@ -1,6 +1,7 @@
 # Yggdrasil
 
 An app to create and view quizzes
+**Live:** <https://yggdrasil-experis.azurewebsites.net>
 
 ## Prerequisites
 
@@ -47,7 +48,8 @@ your own, never commit or share it.
 
 > [!IMPORTANT]
 > **Prerequisite:** `openssl`
->> Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
+>
+> > Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
 
 ```bash
 dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
