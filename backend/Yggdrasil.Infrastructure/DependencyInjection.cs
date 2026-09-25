@@ -49,6 +49,7 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<YggdrasilDbContext>();
 
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserLookupService, IdentityService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IQuizRepository, QuizRepository>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();

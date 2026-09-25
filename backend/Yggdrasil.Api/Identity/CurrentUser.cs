@@ -20,4 +20,8 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
     }
 
     public bool IsInRole(string role) => httpContextAccessor.HttpContext?.User.IsInRole(role) ?? false;
+
+    public string UserName =>
+        httpContextAccessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value!;
+
 }
