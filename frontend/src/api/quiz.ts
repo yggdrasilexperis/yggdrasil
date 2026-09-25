@@ -1,14 +1,23 @@
 import { request } from './client';
-import type { PagedResult, QuizDetail, QuizSummary, UpdateQuizRequest } from './types';
+import type {
+  GetQuizzesRequest,
+  PagedResult,
+  QuizDetail,
+  QuizSummary,
+  UpdateQuizRequest,
+} from './types';
 
-/** Quizzes carrying every slug given; no slugs lists them all. */
-export function listQuizzes(categorySlugs: string[] = []): Promise<PagedResult<QuizSummary>> {
-  const params = new URLSearchParams();
-  categorySlugs.forEach((slug) => params.append('categorySlugs', slug));
-  const query = params.toString();
-  return request<PagedResult<QuizSummary>>(`/api/quizzes${query ? `?${query}` : ''}`, {
-    authenticated: false,
+/** One page of the quizzes carrying every slug given, in the order asked for. */
+export function listQuizzes(query: GetQuizzesRequest): Promise<PagedResult<QuizSummary>> {
+  const params = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+    sortBy: query.sortBy,
+    sortDirection: query.sortDirection,
   });
+
+  query.categorySlugs.forEach((slug) => params.append('categorySlugs', slug));
+  return request<PagedResult<QuizSummary>>(`/api/quizzes?${params}`, { authenticated: false });
 }
 
 export function getQuizDetail(id: string): Promise<QuizDetail> {
