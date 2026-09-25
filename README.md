@@ -59,15 +59,17 @@ dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --proje
 dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
+**7. Seed database.** Pick a password for the seed users and store it, then seed.
 
-
-**7. Seed database.**
-
+```bash
+dotnet user-secrets set "Seed:Password" "<pick one>" --project backend/Yggdrasil.Api
 ```
+
+```bash
 dotnet run --project backend/Yggdrasil.Api -- --seed
 ```
 
-The test users all share the same password:
+This creates `alva@example.com`, `jonas@example.com` and `admin@example.com`, all with the password you just set.
 
 **8. Install frontend dependencies.**
 
