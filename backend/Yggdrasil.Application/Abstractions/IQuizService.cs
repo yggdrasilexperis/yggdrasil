@@ -26,6 +26,12 @@ public interface IQuizService
         CreateQuestionRequest request,
         CancellationToken cancellationToken
     );
+    Task<QuestionResponse> UpdateQuestionAsync(
+        Guid quizId,
+        Guid questionId,
+        UpdateQuestionRequest request,
+        CancellationToken cancellationToken
+    );
     Task DeleteQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken);
     Task<IEnumerable<CategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken);
 }

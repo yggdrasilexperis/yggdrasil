@@ -193,6 +193,40 @@ public class QuizService(
         return ToResponse(question);
     }
 
+    public async Task<QuestionResponse> UpdateQuestionAsync(
+        Guid quizId,
+        Guid questionId,
+        UpdateQuestionRequest request,
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureCanModifyAsync(quizId, "update questions in this quiz", cancellationToken);
+
+        var question = await quizRepository.GetQuestionAsync(quizId, questionId, cancellationToken);
+        if (question == null)
+        {
+            logger.LogWarning("Question with id {id} not found", questionId);
+            throw new NotFoundException("Question", questionId);
+        }
+
+        // CreatedAt is left alone: questions are listed by it, so this one keeps its place.
+        question.Text = request.Text;
+        question.AnswerOptions = request
+            .AnswerOptions.Select(option => new AnswerOption
+            {
+                Id = Guid.NewGuid(),
+                QuestionId = question.Id,
+                Text = option.Text,
+                IsCorrect = option.IsCorrect,
+                CreatedAt = DateTimeOffset.UtcNow,
+            })
+            .ToList();
+
+        await quizRepository.UpdateQuestionAsync(question, cancellationToken);
+
+        return ToResponse(question);
+    }
+
     public async Task DeleteQuestionAsync(
         Guid quizId,
         Guid questionId,
