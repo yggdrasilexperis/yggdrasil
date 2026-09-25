@@ -363,4 +363,108 @@ public sealed class QuizServiceTests
             )
         );
     }
+
+    [Fact]
+    public async Task UpdateQuestionAsync_WhenCallerIsNotOwner_ThrowsForbidden()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.UpdateQuestionAsync(QuizId, QuestionId, UpdatedQuestion(), CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateQuestionAsync_WhenTheQuestionBelongsToAnotherQuiz_ThrowsNotFound()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns((Question?)null);
+        _currentUser.UserId.Returns(OwnerId);
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.UpdateQuestionAsync(QuizId, QuestionId, UpdatedQuestion(), CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateQuestionAsync_WhenCallerIsOwner_ReplacesTextAndAnswerOptionsButKeepsCreatedAt()
+    {
+        var question = ExistingQuestion();
+        var createdAt = question.CreatedAt;
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns(question);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        var response = await _sut.UpdateQuestionAsync(
+            QuizId,
+            QuestionId,
+            UpdatedQuestion(),
+            CancellationToken.None
+        );
+
+        response.Id.ShouldBe(QuestionId);
+        response.Text.ShouldBe("Capital of Sweden?");
+        response.AnswerOptions.Select(option => option.Text).ShouldBe(["Stockholm", "Gothenburg", "Uppsala"]);
+        question.CreatedAt.ShouldBe(createdAt);
+
+        await _quizRepository
+            .Received(1)
+            .UpdateQuestionAsync(question, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateQuestionAsync_WhenCallerIsAdminButNotOwner_Succeeds()
+    {
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns(ExistingQuestion());
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        await _sut.UpdateQuestionAsync(QuizId, QuestionId, UpdatedQuestion(), CancellationToken.None);
+
+        await _quizRepository
+            .Received(1)
+            .UpdateQuestionAsync(Arg.Any<Question>(), Arg.Any<CancellationToken>());
+    }
+
+    private static UpdateQuestionRequest UpdatedQuestion() =>
+        new(
+            "Capital of Sweden?",
+            [
+                new CreateAnswerOptionRequest("Stockholm", true),
+                new CreateAnswerOptionRequest("Gothenburg", false),
+                new CreateAnswerOptionRequest("Uppsala", false),
+            ]
+        );
+
+    private static Question ExistingQuestion() =>
+        new()
+        {
+            Id = QuestionId,
+            QuizId = QuizId,
+            Text = "Capital of Norway?",
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            AnswerOptions =
+            [
+                new AnswerOption { Id = Guid.NewGuid(), Text = "Oslo", IsCorrect = true },
+                new AnswerOption { Id = Guid.NewGuid(), Text = "Bergen", IsCorrect = false },
+            ],
+        };
 }
