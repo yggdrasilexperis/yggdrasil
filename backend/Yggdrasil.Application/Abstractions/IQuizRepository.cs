@@ -14,10 +14,17 @@ public interface IQuizRepository
     Task<Quiz?> GetByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
     Task<Quiz?> GetByQuizTitleAsync(string quizName, CancellationToken cancellationToken);
     Task<List<Comment>> GetCommentsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
+
+    Task AddCommentAsync(Comment comment, CancellationToken cancellationToken);
+    Task UpdateCommentAsync(Comment comment, CancellationToken cancellationToken);
+    Task DeleteCommentAsync(Comment comment, CancellationToken cancellationToken);
+
+
     Task<List<Question>> GetQuestionsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken);
     Task<bool> QuizExistsAsync(Guid quizId, CancellationToken cancellationToken);
     Task<Guid?> GetOwnerIdAsync(Guid quizId, CancellationToken cancellationToken);
     Task AddQuestionAsync(Question question, CancellationToken cancellationToken);
     Task<Question?> GetQuestionAsync(Guid quizId, Guid questionId, CancellationToken cancellationToken);
     Task DeleteQuestionAsync(Question question, CancellationToken cancellationToken);
+    Task<Comment?> GetCommentAsync(Guid quizId, Guid commentId, CancellationToken cancellationToken);
 }
