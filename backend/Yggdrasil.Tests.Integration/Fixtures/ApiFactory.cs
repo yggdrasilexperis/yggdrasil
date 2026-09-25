@@ -25,6 +25,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        var webRoot = Directory.CreateTempSubdirectory("yggdrasil-wwwroot").FullName;
+        File.WriteAllText(
+            Path.Combine(webRoot, "index.html"),
+            "<!doctype html><title>Yggdrasil</title>"
+        );
+        builder.UseWebRoot(webRoot);
+
         builder.UseSetting("ConnectionStrings:Postgres", _container.GetConnectionString());
         builder.UseSetting(
             $"{JwtOptions.SectionName}:{nameof(JwtOptions.IssuerSigningKey)}",
@@ -41,7 +48,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await _container.StartAsync();
 
         await using var scope = Services.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<YggdrasilDbContext>()
+        await scope
+            .ServiceProvider.GetRequiredService<YggdrasilDbContext>()
             .Database.MigrateAsync();
     }
 
@@ -51,7 +59,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public async Task ResetAsync()
     {
         await using var scope = Services.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<YggdrasilDbContext>()
+        await scope
+            .ServiceProvider.GetRequiredService<YggdrasilDbContext>()
             .Database.ExecuteSqlRawAsync("""TRUNCATE "AspNetUsers", "Categories" CASCADE""");
     }
 
