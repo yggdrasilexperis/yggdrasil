@@ -11,6 +11,7 @@ import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
+import { AddQuestionForm } from './AddQuestionForm';
 import { CategoryEditor } from './CategoryEditor';
 
 export function QuizDetailPage() {
@@ -25,6 +26,7 @@ export function QuizDetailPage() {
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [addingQuestion, setAddingQuestion] = useState(false);
   const [removingQuestionId, setRemovingQuestionId] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState('');
 
@@ -216,6 +218,26 @@ export function QuizDetailPage() {
             </ul>
           </Card>
         ))}
+
+        {canManage &&
+          (addingQuestion ? (
+            <AddQuestionForm
+              quizId={quiz.id}
+              onAdded={(question) => {
+                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, question] });
+                setAddingQuestion(false);
+              }}
+              onCancel={() => setAddingQuestion(false)}
+            />
+          ) : (
+            <Button
+              variant="secondary"
+              className="self-start"
+              onClick={() => setAddingQuestion(true)}
+            >
+              Add question
+            </Button>
+          ))}
       </div>
 
       <CommentSection comments={comments} canComment={!!user} onAdd={handleAddComment} />
