@@ -81,6 +81,7 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
             .FirstOrDefaultAsync(q => q.Id == quizId, cancellationToken);
     }
 
+
     public Task<List<Question>> GetQuestionsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken) =>
         _dbContext.Questions
             .Where(q => q.QuizId == quizId)
@@ -110,10 +111,33 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public Task<Comment?> GetCommentAsync(Guid quizId, Guid commentId, CancellationToken cancellationToken) =>
+        _dbContext.Comments
+            .FirstOrDefaultAsync(c => c.QuizId == quizId && c.Id == commentId,
+                cancellationToken: cancellationToken);
+
     public Task<List<Comment>> GetCommentsByQuizIdAsync(Guid quizId, CancellationToken cancellationToken) =>
         _dbContext.Comments
             .Where(c => c.QuizId == quizId)
             .ToListAsync(cancellationToken);
+
+    public async Task AddCommentAsync(Comment comment, CancellationToken cancellationToken)
+    {
+        _dbContext.Comments.Add(comment);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateCommentAsync(Comment comment, CancellationToken cancellationToken)
+    {
+        _dbContext.Comments.Update(comment);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteCommentAsync(Comment comment, CancellationToken cancellationToken)
+    {
+        _dbContext.Comments.Remove(comment);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 
 
     public Task<Quiz?> GetByQuizTitleAsync(string quizName, CancellationToken cancellationToken)

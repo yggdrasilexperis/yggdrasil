@@ -35,12 +35,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapQuizEndpoints();
 app.MapCategoryEndpoints();
+
+app.MapFallback("api/{*path}", () => TypedResults.NotFound());
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

@@ -13,7 +13,8 @@ public class QuizService(
     IQuizRepository quizRepository,
     ICategoryRepository categoryRepository,
     ILogger<QuizService> logger,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    IUserLookupService userLookupService
 ) : IQuizService
 {
     public async Task<QuizResponse> CreateQuizAsync(
@@ -52,6 +53,8 @@ public class QuizService(
         }
 
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
+        var usernames = await userLookupService.GetUserNamesAsync(
+            comments.Select(c => c.AuthorId), cancellationToken);
 
         return new QuizContentResponse(
             ToResponse(quiz),
@@ -59,6 +62,7 @@ public class QuizService(
             comments.Select(comment => new CommentResponse(
                 comment.Id,
                 comment.AuthorId,
+                usernames.GetValueOrDefault(comment.AuthorId, "Unknown user"),
                 comment.Body,
                 comment.CreatedAt,
                 comment.UpdatedAt
@@ -138,10 +142,13 @@ public class QuizService(
             throw new NotFoundException("Quiz", id);
         }
         var comments = await quizRepository.GetCommentsByQuizIdAsync(id, cancellationToken);
+        var usernames = await userLookupService.GetUserNamesAsync(
+            comments.Select(c => c.AuthorId), cancellationToken);
 
         return comments.Select(c => new CommentResponse(
             c.Id,
             c.AuthorId,
+            usernames.GetValueOrDefault(c.AuthorId, "Unknown user"),
             c.Body,
             c.CreatedAt,
             c.UpdatedAt
@@ -191,6 +198,81 @@ public class QuizService(
         await quizRepository.AddQuestionAsync(question, cancellationToken);
 
         return ToResponse(question);
+    }
+
+    public async Task<CommentResponse> UpdateCommentAsync(Guid quizId, Guid commentId, UpdateCommentRequest request, CancellationToken cancellationToken)
+    {
+        var comment = await quizRepository.GetCommentAsync(quizId, commentId, cancellationToken);
+
+        if (comment == null)
+            throw new NotFoundException("Comment", commentId);
+
+        if (comment.AuthorId != currentUser.UserId)
+        {
+            throw new ForbiddenException("update this comment");
+        }
+
+        comment.Body = request.Body;
+        comment.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await quizRepository.UpdateCommentAsync(comment, cancellationToken);
+
+        var usernames = await userLookupService.GetUserNamesAsync([comment.AuthorId], cancellationToken);
+
+        return new CommentResponse(
+            comment.Id,
+            comment.AuthorId,
+            usernames.GetValueOrDefault(comment.AuthorId, "Unknown user"),
+            comment.Body,
+            comment.CreatedAt,
+            comment.UpdatedAt
+        );
+    }
+
+    public async Task<CommentResponse> AddCommentAsync(Guid quizId, CreateCommentRequest request, CancellationToken cancellationToken)
+    {
+        var exists = await quizRepository.QuizExistsAsync(quizId, cancellationToken);
+        if (!exists)
+        {
+            throw new NotFoundException("Quiz", quizId);
+        }
+
+        var comment = new Comment
+        {
+            Id = Guid.NewGuid(),
+            QuizId = quizId,
+            AuthorId = currentUser.UserId,
+            Body = request.Body,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        await quizRepository.AddCommentAsync(comment, cancellationToken);
+
+        return new CommentResponse(
+            comment.Id,
+            comment.AuthorId,
+            currentUser.UserName,
+            comment.Body,
+            comment.CreatedAt,
+            comment.UpdatedAt
+        );
+
+    }
+
+    public async Task DeleteCommentAsync(Guid quizId, Guid commentId, CancellationToken cancellationToken)
+    {
+        var comment = await quizRepository.GetCommentAsync(quizId, commentId, cancellationToken);
+
+        if (comment == null)
+            throw new NotFoundException("Comment", commentId);
+
+        if (comment.AuthorId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
+        {
+            throw new ForbiddenException("delete comment from this quiz");
+        }
+
+        await quizRepository.DeleteCommentAsync(comment, cancellationToken);
     }
 
     public async Task DeleteQuestionAsync(
