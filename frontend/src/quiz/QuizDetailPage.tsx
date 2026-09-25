@@ -167,11 +167,14 @@ export function QuizDetailPage() {
               {question.answerOptions.map((option) => (
                 <li
                   key={option.id}
-                  className={`rounded-control border px-4 py-3 ${
-                    option.isCorrect ? 'border-green-600' : 'border-hairline'
+                  className={`flex justify-between gap-4 rounded-control border px-4 py-3 ${
+                    canManage && option.isCorrect ? 'border-green-600' : 'border-hairline'
                   }`}
                 >
                   {option.text}
+                  {canManage && option.isCorrect && (
+                    <span className="text-sm text-green-600 mt-0.5">Correct</span>
+                  )}
                 </li>
               ))}
             </ul>
