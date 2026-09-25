@@ -22,11 +22,23 @@ public sealed class QuizServiceTests
     private static readonly Guid AdminId = Guid.Parse("33333333-3333-3333-3333-333333333333");
     private static readonly Guid QuizId = Guid.Parse("44444444-4444-4444-4444-444444444444");
     private static readonly Guid QuestionId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+    private static readonly Guid CommentId = Guid.Parse("66666666-6666-6666-6666-666666666666");
+
+    private static Comment OwnedComment() => new()
+    {
+        Id = CommentId,
+        QuizId = QuizId,
+        AuthorId = OwnerId,
+        Body = "Original body",
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow,
+    };
 
     private readonly IQuizRepository _quizRepository = Substitute.For<IQuizRepository>();
     private readonly ICategoryRepository _categoryRepository =
         Substitute.For<ICategoryRepository>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
+    private readonly IUserLookupService _lookUp = Substitute.For<IUserLookupService>();
     private readonly QuizService _sut;
 
     public QuizServiceTests()
@@ -35,7 +47,8 @@ public sealed class QuizServiceTests
             _quizRepository,
             _categoryRepository,
             Substitute.For<ILogger<QuizService>>(),
-            _currentUser
+            _currentUser,
+            _lookUp
         );
     }
 
@@ -315,4 +328,196 @@ public sealed class QuizServiceTests
             .Received(1)
             .DeleteQuestionAsync(question, Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenCallerIsNotOwnerOrAdmin_ThrowsForbidden()
+    {
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(OwnedComment());
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.DeleteCommentAsync(QuizId, CommentId, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .DeleteCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenTheCommentBelongsToAnotherQuiz_ThrowsNotFound()
+    {
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns((Comment?)null);
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.DeleteCommentAsync(QuizId, CommentId, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .DeleteCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenCallerIsAdminButNotOwner_Succeeds()
+    {
+        var comment = OwnedComment();
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(comment);
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        await _sut.DeleteCommentAsync(QuizId, CommentId, CancellationToken.None);
+
+        await _quizRepository.Received(1).DeleteCommentAsync(comment, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenCallerIsOwner_Succeeds()
+    {
+        var comment = OwnedComment();
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(comment);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        await _sut.DeleteCommentAsync(QuizId, CommentId, CancellationToken.None);
+
+        await _quizRepository.Received(1).DeleteCommentAsync(comment, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteQuestionAsync_WhenCallerIsAdminButNotOwner_Succeeds()
+    {
+        var question = new Question
+        {
+            Id = QuestionId,
+            QuizId = QuizId,
+            Text = "Capital of Norway?",
+        };
+        _quizRepository.GetOwnerIdAsync(QuizId, Arg.Any<CancellationToken>()).Returns(OwnerId);
+        _quizRepository
+            .GetQuestionAsync(QuizId, QuestionId, Arg.Any<CancellationToken>())
+            .Returns(question);
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        await _sut.DeleteQuestionAsync(QuizId, QuestionId, CancellationToken.None);
+
+        await _quizRepository
+            .Received(1)
+            .DeleteQuestionAsync(question, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateCommentAsync_WhenTheCommentBelongsToAnotherQuiz_ThrowsNotFound()
+    {
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns((Comment?)null);
+
+        var request = new UpdateCommentRequest("Attempted update");
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.UpdateCommentAsync(QuizId, CommentId, request, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateCommentAsync_WhenTheCallerIsOwner_Succeeds()
+    {
+        var comment = OwnedComment();
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(comment);
+        _currentUser.UserId.Returns(OwnerId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+        _lookUp
+            .GetUserNamesAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, string> { [OwnerId] = "owner-username" });
+
+        var request = new UpdateCommentRequest("Updated body");
+
+        var response = await _sut.UpdateCommentAsync(QuizId, CommentId, request, CancellationToken.None);
+
+        response.Body.ShouldBe("Updated body");
+        response.AuthorUsername.ShouldBe("owner-username");
+        await _quizRepository
+            .Received(1)
+            .UpdateCommentAsync(Arg.Is<Comment>(c => c.Body == "Updated body"), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateCommentAsync_WhenTheCallerIsNotOwnerOrAdmin_ThrowsForbidden()
+    {
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(OwnedComment());
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.IsInRole(Roles.Admin).Returns(false);
+
+        var request = new UpdateCommentRequest("Attempted update");
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.UpdateCommentAsync(QuizId, CommentId, request, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateCommentAsync_WhenCallerIsAdminButNotOwner_ThrowsForbidden()
+    {
+        _quizRepository.GetCommentAsync(QuizId, CommentId, Arg.Any<CancellationToken>()).Returns(OwnedComment());
+        _currentUser.UserId.Returns(AdminId);
+        _currentUser.IsInRole(Roles.Admin).Returns(true);
+
+        var request = new UpdateCommentRequest("Attempted admin update");
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.UpdateCommentAsync(QuizId, CommentId, request, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .UpdateCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AddCommentAsync_WhenQuizDoesNotExist_ThrowsNotFound()
+    {
+        _quizRepository.QuizExistsAsync(QuizId, Arg.Any<CancellationToken>()).Returns(false);
+
+        var request = new CreateCommentRequest("New comment");
+
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _sut.AddCommentAsync(QuizId, request, CancellationToken.None)
+        );
+
+        await _quizRepository
+            .DidNotReceive()
+            .AddCommentAsync(Arg.Any<Comment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AddCommentAsync_WhenAnyAuthenticatedCallerAddsAComment_Succeeds()
+    {
+        _currentUser.UserId.Returns(OtherUserId);
+        _currentUser.UserName.Returns("commenter");
+        _quizRepository.QuizExistsAsync(QuizId, Arg.Any<CancellationToken>()).Returns(true);
+
+        var request = new CreateCommentRequest("New comment");
+
+        var response = await _sut.AddCommentAsync(QuizId, request, CancellationToken.None);
+
+        response.Body.ShouldBe("New comment");
+        response.AuthorId.ShouldBe(OtherUserId);
+        response.AuthorUsername.ShouldBe("commenter");
+        await _quizRepository
+            .Received(1)
+            .AddCommentAsync(
+                Arg.Is<Comment>(c => c.QuizId == QuizId && c.AuthorId == OtherUserId && c.Body == "New comment"),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
 }
