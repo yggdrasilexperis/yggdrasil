@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { deleteQuiz, getQuizDetail, updateQuiz } from '../api/quiz';
+import { deleteQuiz, getQuizDetail } from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
 import type { Comment, QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
@@ -121,22 +121,22 @@ export function QuizDetailPage() {
               Edit
             </Button>
 
-            {canManage && editingQuiz && (
-              <div>
-                <EditQuizForm
-                  quiz={quiz}
-                  onSaved={(updatedQuiz) => {
-                    setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
-                    setEditingQuiz(false);
-                  }}
-                  onCancel={() => setEditingQuiz(false)}
-                />
-              </div>
-            )}
-
             <Button variant="utility" onClick={handleDelete} disabled={deleting}>
               {deleting ? 'Deleting…' : 'Delete'}
             </Button>
+          </div>
+        )}
+
+        {canManage && editingQuiz && (
+          <div className="mt-4">
+            <EditQuizForm
+              quiz={quiz}
+              onSaved={(updatedQuiz) => {
+                setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
+                setEditingQuiz(false);
+              }}
+              onCancel={() => setEditingQuiz(false)}
+            />
           </div>
         )}
 
