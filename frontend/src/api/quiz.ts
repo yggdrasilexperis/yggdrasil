@@ -1,7 +1,9 @@
 import { request } from './client';
 import type {
+  CreateQuestionRequest,
   GetQuizzesRequest,
   PagedResult,
+  Question,
   QuizDetail,
   QuizSummary,
   UpdateQuizRequest,
@@ -32,4 +34,12 @@ export function updateQuiz(id: string, quiz: UpdateQuizRequest): Promise<QuizSum
 /** Backend enforces ownership too (403 if you're not the owner) — this call is UX, not the guard. */
 export function deleteQuiz(id: string): Promise<void> {
   return request<void>(`/api/quizzes/${id}`, { method: 'DELETE' });
+}
+
+export function addQuestion(quizId: string, question: CreateQuestionRequest): Promise<Question> {
+  return request<Question>(`/api/quizzes/${quizId}/questions`, { method: 'POST', body: question });
+}
+
+export function deleteQuestion(quizId: string, questionId: string): Promise<void> {
+  return request<void>(`/api/quizzes/${quizId}/questions/${questionId}`, { method: 'DELETE' });
 }
