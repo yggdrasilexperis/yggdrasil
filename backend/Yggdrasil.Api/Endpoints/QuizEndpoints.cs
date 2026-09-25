@@ -30,10 +30,13 @@ public static class QuizEndpoints
         group.MapGet("/{id:guid}/comments", GetComments);
 
         group.MapPost("/{id:guid}/comments", AddComment)
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<CreateCommentRequest>>();
 
-        group.MapPut("/{id:guid}/comments", UpdateComment)
-            .RequireAuthorization();
+
+        group.MapPut("/{id:guid}/comments/{commentId:guid}", UpdateComment)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<UpdateCommentRequest>>();
 
         group.MapDelete("/{id:guid}/comments/{commentId:guid}", DeleteComment)
             .RequireAuthorization();

@@ -225,7 +225,7 @@ public class QuizService(
             usernames.GetValueOrDefault(comment.AuthorId, "Unknown user"),
             comment.Body,
             comment.CreatedAt,
-            comment.UpdatedAt = DateTimeOffset.UtcNow
+            comment.UpdatedAt
         );
     }
 
