@@ -34,8 +34,7 @@ export function CommentSection({
       <ul className="flex flex-col gap-3">
         {comments.map((comment) => (
           <li key={comment.id} className="rounded-card border border-hairline p-4">
-            {/* No username-lookup endpoint exists — this is the raw author id. */}
-            <p className="text-sm text-muted">{comment.authorId}</p>
+            <p className="text-sm text-muted">{comment.authorUsername}</p>
             <p className="mt-1">{comment.body}</p>
           </li>
         ))}
