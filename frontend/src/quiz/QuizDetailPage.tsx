@@ -31,6 +31,7 @@ export function QuizDetailPage() {
   const [addingQuestion, setAddingQuestion] = useState(false);
   const [removingQuestionId, setRemovingQuestionId] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState('');
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -82,6 +83,15 @@ export function QuizDetailPage() {
     } finally {
       setRemovingQuestionId(null);
     }
+  }
+
+  function toggleAnswer(questionId: string) {
+    setRevealedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
   }
 
   function handleAddComment(body: string) {
@@ -212,16 +222,25 @@ export function QuizDetailPage() {
                 <li
                   key={option.id}
                   className={`flex justify-between gap-4 rounded-control border px-4 py-3 ${
-                    canManage && option.isCorrect ? 'border-green-600' : 'border-hairline'
+                    revealedIds.has(question.id) && option.isCorrect
+                      ? 'border-green-600 outline-1 outline-green-600'
+                      : 'border-hairline outline-0'
                   }`}
                 >
                   {option.text}
-                  {canManage && option.isCorrect && (
-                    <span className="text-sm text-green-600 mt-0.5">Correct</span>
+                  {revealedIds.has(question.id) && option.isCorrect && (
+                    <span className="text-sm font-bold text-green-600 mt-0.5">Correct</span>
                   )}
                 </li>
               ))}
             </ul>
+            <Button
+              variant="secondary"
+              className="self-start"
+              onClick={() => toggleAnswer(question.id)}
+            >
+              {revealedIds.has(question.id) ? 'Hide answer' : 'Show answer'}
+            </Button>
           </Card>
         ))}
 
