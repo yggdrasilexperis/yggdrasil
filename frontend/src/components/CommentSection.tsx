@@ -58,10 +58,13 @@ export function CommentSection({
         {comments.map((comment) => (
           <li key={comment.id} className="rounded-card border border-hairline p-4">
             <div className="flex flex-wrap items-center justify-between text-sm text-muted">
-              <span className="font-semibold text-ink">{comment.authorUsername}</span>
-              {comment.authorId === quizOwnerId && (
-                <span className="rounded-control bg-parchment px-2">Quiz author</span>
-              )}
+              <div>
+                <span className="font-semibold text-ink">{comment.authorUsername}</span>
+                {comment.authorId === quizOwnerId && (
+                  <span className="ml-2 rounded-control bg-parchment px-2">Quiz author</span>
+                )}
+              </div>
+
               <time
                 dateTime={comment.createdAt}
                 title={fullDate.format(new Date(comment.createdAt))}
