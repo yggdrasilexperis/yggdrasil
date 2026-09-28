@@ -86,6 +86,7 @@ export function QuizDetailPage() {
 
   function handleAddComment(body: string) {
     if (!user) return;
+    const now = new Date().toISOString();
     setLocalComments((prev) => [
       ...prev,
       {
@@ -93,8 +94,8 @@ export function QuizDetailPage() {
         authorId: user.id,
         authorUsername: user.userName,
         body,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       },
     ]);
   }
@@ -247,7 +248,12 @@ export function QuizDetailPage() {
           ))}
       </div>
 
-      <CommentSection comments={comments} canComment={!!user} onAdd={handleAddComment} />
+      <CommentSection
+        comments={comments}
+        quizOwnerId={quiz.ownerId}
+        canComment={!!user}
+        onAdd={handleAddComment}
+      />
     </div>
   );
 }
