@@ -91,6 +91,7 @@ export function QuizDetailPage() {
       {
         id: crypto.randomUUID(),
         authorId: user.id,
+        authorUsername: user.userName,
         body,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

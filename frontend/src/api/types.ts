@@ -131,6 +131,7 @@ export type CreateQuestionRequest = {
 export type Comment = {
   id: string;
   authorId: string;
+  authorUsername: string;
   body: string;
   createdAt: string;
   updatedAt: string;
