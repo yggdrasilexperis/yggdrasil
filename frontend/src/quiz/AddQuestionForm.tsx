@@ -39,6 +39,12 @@ function validate(text: string, options: CreateAnswerOptionsRequest[]): FieldErr
   return errors;
 }
 
+function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
+  const filled = options.filter((option) => option.text.trim());
+  if (filled.length < 2) return options;
+  return options.filter((option) => option.text.trim() || option.isCorrect);
+}
+
 export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
   const [text, setText] = useState('');
   const [options, setOptions] = useState([blankOption, blankOption]);
@@ -64,7 +70,10 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
     event.preventDefault();
     setFormError('');
 
-    const clientErrors = validate(text, options);
+    const kept = dropEmptyOptions(options);
+    setOptions(kept);
+
+    const clientErrors = validate(text, kept);
     setFieldErrors(clientErrors);
     if (Object.keys(clientErrors).length > 0) return;
 
@@ -72,7 +81,7 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
     try {
       const question = await addQuestion(quizId, {
         text: text.trim(),
-        answerOptions: options.map((option) => ({ ...option, text: option.text.trim() })),
+        answerOptions: kept.map((option) => ({ ...option, text: option.text.trim() })),
       });
       onAdded(question);
     } catch (err) {
@@ -80,7 +89,7 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
         setFieldErrors({
           text: err.fieldError('text'),
           answerOptions: err.fieldError('answerOptions'),
-          optionTexts: options.map((_, i) => err.fieldError(`answerOptions[${i}].text`)),
+          optionTexts: kept.map((_, i) => err.fieldError(`answerOptions[${i}].text`)),
         });
         setFormError('The question was not saved. Fix the fields below.');
       } else {
