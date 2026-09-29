@@ -2,15 +2,16 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
-import type { CreateAnswerOptionsRequest, CreateQuestionRequest } from '../api/types';
+import { addQuestion } from '../api/quiz';
+import type { CreateAnswerOptionsRequest, Question } from '../api/types';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 
 type Props = {
-  onSave: (question: CreateQuestionRequest) => Promise<void>;
+  quizId: string;
+  onAdded: (question: Question) => void;
   onCancel: () => void;
-  submitLabel?: string;
 };
 
 type FieldErrors = {
@@ -44,7 +45,7 @@ function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
   return options.filter((option) => option.text.trim() || option.isCorrect);
 }
 
-export function AddQuestionForm({ onSave, onCancel, submitLabel = 'Save question' }: Props) {
+export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
   const [text, setText] = useState('');
   const [options, setOptions] = useState([blankOption, blankOption]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -78,10 +79,11 @@ export function AddQuestionForm({ onSave, onCancel, submitLabel = 'Save question
 
     setSaving(true);
     try {
-      await onSave({
+      const question = await addQuestion(quizId, {
         text: text.trim(),
         answerOptions: kept.map((option) => ({ ...option, text: option.text.trim() })),
       });
+      onAdded(question);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setFieldErrors({
@@ -167,7 +169,7 @@ export function AddQuestionForm({ onSave, onCancel, submitLabel = 'Save question
 
         <div className="flex gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : submitLabel}
+            {saving ? 'Saving…' : 'Save question'}
           </Button>
           <Button variant="secondary" onClick={onCancel} disabled={saving}>
             Cancel
