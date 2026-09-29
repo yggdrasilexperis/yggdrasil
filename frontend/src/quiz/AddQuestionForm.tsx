@@ -2,16 +2,15 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
-import { addQuestion } from '../api/quiz';
-import type { CreateAnswerOptionsRequest, Question } from '../api/types';
+import type { CreateAnswerOptionsRequest, CreateQuestionRequest } from '../api/types';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 
 type Props = {
-  quizId: string;
-  onAdded: (question: Question) => void;
+  onSave: (question: CreateQuestionRequest) => Promise<void>;
   onCancel: () => void;
+  submitLabel?: string;
 };
 
 type FieldErrors = {
@@ -45,7 +44,7 @@ function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
   return options.filter((option) => option.text.trim() || option.isCorrect);
 }
 
-export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
+export function AddQuestionForm({ onSave, onCancel, submitLabel = 'Save question' }: Props) {
   const [text, setText] = useState('');
   const [options, setOptions] = useState([blankOption, blankOption]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -79,11 +78,10 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
 
     setSaving(true);
     try {
-      const question = await addQuestion(quizId, {
+      await onSave({
         text: text.trim(),
         answerOptions: kept.map((option) => ({ ...option, text: option.text.trim() })),
       });
-      onAdded(question);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setFieldErrors({
@@ -169,7 +167,7 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save question'}
+            {saving ? 'Saving…' : submitLabel}
           </Button>
           <Button variant="secondary" onClick={onCancel} disabled={saving}>
             Cancel
