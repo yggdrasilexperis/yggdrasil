@@ -48,6 +48,10 @@ public static class QuizEndpoints
             .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<CreateQuestionRequest>>();
 
+        group.MapPut("/{id:guid}/questions/{questionId:guid}", UpdateQuestion)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<UpdateQuestionRequest>>();
+
         group.MapDelete("/{id:guid}/questions/{questionId:guid}", DeleteQuestion)
             .RequireAuthorization();
 
@@ -166,6 +170,18 @@ public static class QuizEndpoints
     {
         var response = await quizService.AddQuestionAsync(id, request, cancellationToken);
         return TypedResults.Created($"/api/quizzes/{id}/questions", response);
+    }
+
+    private static async Task<Ok<QuestionResponse>> UpdateQuestion(
+        Guid id,
+        Guid questionId,
+        UpdateQuestionRequest request,
+        IQuizService quizService,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await quizService.UpdateQuestionAsync(id, questionId, request, cancellationToken);
+        return TypedResults.Ok(response);
     }
 
     private static async Task<NoContent> DeleteQuestion(

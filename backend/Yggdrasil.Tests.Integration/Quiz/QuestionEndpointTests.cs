@@ -141,6 +141,129 @@ public sealed class QuestionEndpointTests(ApiFactory factory) : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task UpdateQuestion_AsTheOwner_Returns200AndReplacesTheQuestionInPlace()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+        var questionId = await AddQuestionAsync(quizId);
+        var secondQuestionId = await AddQuestionAsync(quizId);
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{quizId}/questions/{questionId}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var question = (await response.Content.ReadFromJsonAsync<QuestionResponse>())!;
+        question.Id.ShouldBe(questionId);
+        question.Text.ShouldBe("Capital of Sweden?");
+        question.AnswerOptions.Count().ShouldBe(3);
+        question.AnswerOptions.ShouldContain(option => option.Text == "Stockholm" && option.IsCorrect);
+
+        // Still first, and three options rather than five: the old ones were replaced, not kept.
+        var questions = await _client.GetFromJsonAsync<List<QuestionResponse>>(
+            $"{Url}/{quizId}/questions"
+        );
+        questions!.Select(q => q.Id).ShouldBe([questionId, secondQuestionId]);
+        questions![0].Text.ShouldBe("Capital of Sweden?");
+        questions![0].AnswerOptions.Count().ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_WithOnlyOneAnswerOption_Returns400()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+        var questionId = await AddQuestionAsync(quizId);
+
+        var request = new UpdateQuestionRequest(
+            "Capital of Sweden?",
+            [new CreateAnswerOptionRequest("Stockholm", true)]
+        );
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{quizId}/questions/{questionId}",
+            request
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_WithoutAToken_Returns401()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+        var questionId = await AddQuestionAsync(quizId);
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{quizId}/questions/{questionId}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_AsSomeoneElse_Returns403()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+        var questionId = await AddQuestionAsync(quizId);
+        await SignInAsync("grace@example.com", "grace_hopper");
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{quizId}/questions/{questionId}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_WhenTheQuizDoesNotExist_Returns404()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{Guid.NewGuid()}/questions/{Guid.NewGuid()}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_WhenTheQuestionDoesNotExist_Returns404()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{quizId}/questions/{Guid.NewGuid()}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateQuestion_WhenItBelongsToAnotherQuiz_Returns404()
+    {
+        await SignInAsync("ada@example.com", "ada_lovelace");
+        var quizId = await CreateQuizAsync();
+        var otherQuizId = await CreateQuizAsync("Rivers");
+        var questionId = await AddQuestionAsync(quizId);
+
+        var response = await _client.PutAsJsonAsync(
+            $"{Url}/{otherQuizId}/questions/{questionId}",
+            UpdatedQuestion()
+        );
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     // A Restrict foreign key would make Postgres reject this delete and the API answer 500,
     // so a 204 here is what proves the cascade from quiz to questions.
     [Fact]
@@ -196,6 +319,16 @@ public sealed class QuestionEndpointTests(ApiFactory factory) : IAsyncLifetime
             [
                 new CreateAnswerOptionRequest("Oslo", true),
                 new CreateAnswerOptionRequest("Bergen", false),
+            ]
+        );
+
+    private static UpdateQuestionRequest UpdatedQuestion() =>
+        new(
+            "Capital of Sweden?",
+            [
+                new CreateAnswerOptionRequest("Stockholm", true),
+                new CreateAnswerOptionRequest("Gothenburg", false),
+                new CreateAnswerOptionRequest("Uppsala", false),
             ]
         );
 }
