@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { addQuestion, deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
+import { deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
 import type { Comment, QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
@@ -249,9 +249,9 @@ export function QuizDetailPage() {
         {canManage &&
           (addingQuestion ? (
             <AddQuestionForm
-              onSave={async (question) => {
-                const saved = await addQuestion(quiz.id, question);
-                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, saved] });
+              quizId={quiz.id}
+              onAdded={(question) => {
+                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, question] });
                 setAddingQuestion(false);
               }}
               onCancel={() => setAddingQuestion(false)}
