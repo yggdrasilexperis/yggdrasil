@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
-import { addQuestion } from '../api/quiz';
+import { addQuestion, updateQuestion } from '../api/quiz';
 import type { CreateAnswerOptionsRequest, Question } from '../api/types';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -10,7 +10,8 @@ import { Input } from '../components/Input';
 
 type Props = {
   quizId: string;
-  onAdded: (question: Question) => void;
+  question?: Question;
+  onSaved: (question: Question) => void;
   onCancel: () => void;
 };
 
@@ -45,9 +46,14 @@ function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
   return options.filter((option) => option.text.trim() || option.isCorrect);
 }
 
-export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
-  const [text, setText] = useState('');
-  const [options, setOptions] = useState([blankOption, blankOption]);
+export function QuestionForm({ quizId, question, onSaved, onCancel }: Props) {
+  const [text, setText] = useState(question?.text ?? '');
+  const [options, setOptions] = useState<CreateAnswerOptionsRequest[]>(
+    question?.answerOptions.map((option) => ({
+      text: option.text,
+      isCorrect: option.isCorrect,
+    })) ?? [blankOption, blankOption],
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -79,11 +85,14 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
 
     setSaving(true);
     try {
-      const question = await addQuestion(quizId, {
+      const request = {
         text: text.trim(),
         answerOptions: kept.map((option) => ({ ...option, text: option.text.trim() })),
-      });
-      onAdded(question);
+      };
+      const saved = question
+        ? await updateQuestion(quizId, question.id, request)
+        : await addQuestion(quizId, request);
+      onSaved(saved);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setFieldErrors({
