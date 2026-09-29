@@ -204,7 +204,7 @@ export function QuizDetailPage() {
           </p>
         )}
         {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
-        {questions.map((question, index) =>
+        {questions.map((question) =>
           canManage && editingQuestionId === question.id ? (
             <QuestionForm
               key={question.id}
