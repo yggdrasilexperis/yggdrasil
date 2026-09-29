@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
+import {
+  addQuestion,
+  deleteQuestion,
+  deleteQuiz,
+  getQuizDetail,
+  updateQuestion,
+} from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
 import type { Comment, QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
@@ -208,9 +214,9 @@ export function QuizDetailPage() {
           canManage && editingQuestionId === question.id ? (
             <QuestionForm
               key={question.id}
-              quizId={quiz.id}
               question={question}
-              onSaved={(saved) => {
+              onSave={async (request) => {
+                const saved = await updateQuestion(quiz.id, question.id, request);
                 setDetail(
                   (prev) =>
                     prev && {
@@ -276,9 +282,9 @@ export function QuizDetailPage() {
         {canManage &&
           (addingQuestion ? (
             <QuestionForm
-              quizId={quiz.id}
-              onSaved={(question) => {
-                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, question] });
+              onSave={async (question) => {
+                const saved = await addQuestion(quiz.id, question);
+                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, saved] });
                 setAddingQuestion(false);
               }}
               onCancel={() => setAddingQuestion(false)}
