@@ -6,6 +6,7 @@ import type {
   Question,
   QuizDetail,
   QuizSummary,
+  UpdateQuestionRequest,
   UpdateQuizRequest,
 } from './types';
 
@@ -38,6 +39,17 @@ export function deleteQuiz(id: string): Promise<void> {
 
 export function addQuestion(quizId: string, question: CreateQuestionRequest): Promise<Question> {
   return request<Question>(`/api/quizzes/${quizId}/questions`, { method: 'POST', body: question });
+}
+
+export function updateQuestion(
+  quizId: string,
+  questionId: string,
+  question: UpdateQuestionRequest,
+): Promise<Question> {
+  return request<Question>(`/api/quizzes/${quizId}/questions/${questionId}`, {
+    method: 'PUT',
+    body: question,
+  });
 }
 
 export function deleteQuestion(quizId: string, questionId: string): Promise<void> {
