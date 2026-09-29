@@ -137,6 +137,14 @@ export type Comment = {
   updatedAt: string;
 };
 
+export type CreateCommentRequest = {
+  body: string;
+};
+
+export type UpdateCommentRequest = {
+  body: string;
+};
+
 /** What GET /api/quizzes/{id} returns — the whole detail page in one call. */
 export type QuizDetail = {
   quiz: QuizSummary;
