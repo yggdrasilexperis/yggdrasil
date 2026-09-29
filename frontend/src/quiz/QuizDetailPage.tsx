@@ -169,6 +169,14 @@ export function QuizDetailPage() {
                   Edit
                 </Button>
 
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditingCategories(true)}
+                  disabled={editingCategories}
+                >
+                  Edit categories
+                </Button>
+
                 <Button variant="utility" onClick={handleDelete} disabled={deleting}>
                   {deleting ? 'Deleting…' : 'Delete'}
                 </Button>
