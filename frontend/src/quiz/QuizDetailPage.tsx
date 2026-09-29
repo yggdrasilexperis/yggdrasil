@@ -29,6 +29,7 @@ export function QuizDetailPage() {
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [addingQuestion, setAddingQuestion] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [removingQuestionId, setRemovingQuestionId] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState('');
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
@@ -203,48 +204,74 @@ export function QuizDetailPage() {
           </p>
         )}
         {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
-        {questions.map((question, index) => (
-          <Card key={question.id} className="flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-4">
-              <p className="font-display text-xl font-semibold">
-                {index + 1}. {question.text}
-              </p>
-              {canManage && (
-                <Button
-                  variant="utility"
-                  onClick={() => handleRemoveQuestion(question.id)}
-                  disabled={removingQuestionId !== null}
-                >
-                  {removingQuestionId === question.id ? 'Removing...' : 'Remove'}
-                </Button>
-              )}
-            </div>
-            <ul className="flex flex-col gap-2">
-              {question.answerOptions.map((option) => (
-                <li
-                  key={option.id}
-                  className={`flex justify-between gap-4 rounded-control border px-4 py-3 ${
-                    revealedIds.has(question.id) && option.isCorrect
-                      ? 'border-green-600 outline-1 outline-green-600'
-                      : 'border-hairline outline-0'
-                  }`}
-                >
-                  {option.text}
-                  {revealedIds.has(question.id) && option.isCorrect && (
-                    <span className="text-sm font-bold text-green-600 mt-0.5">Correct</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant="secondary"
-              className="self-start"
-              onClick={() => toggleAnswer(question.id)}
-            >
-              {revealedIds.has(question.id) ? 'Hide answer' : 'Show answer'}
-            </Button>
-          </Card>
-        ))}
+        {questions.map((question, index) =>
+          canManage && editingQuestionId === question.id ? (
+            <QuestionForm
+              key={question.id}
+              quizId={quiz.id}
+              question={question}
+              onSaved={(saved) => {
+                setDetail(
+                  (prev) =>
+                    prev && {
+                      ...prev,
+                      questions: prev.questions.map((q) => (q.id === saved.id ? saved : q)),
+                    },
+                );
+                setEditingQuestionId(null);
+              }}
+              onCancel={() => setEditingQuestionId(null)}
+            />
+          ) : (
+            <Card key={question.id} className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-4">
+                <p className="font-display text-xl font-semibold">{question.text}</p>
+                {canManage && (
+                  <div className="flex shrink-0 gap-3">
+                    <Button
+                      variant="utility"
+                      onClick={() => setEditingQuestionId(question.id)}
+                      disabled={editingQuestionId !== null}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="utility"
+                      onClick={() => handleRemoveQuestion(question.id)}
+                      disabled={removingQuestionId !== null}
+                    >
+                      {removingQuestionId === question.id ? 'Removing...' : 'Remove'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <ul className="flex flex-col gap-2">
+                {question.answerOptions.map((option) => (
+                  <li
+                    key={option.id}
+                    className={`flex justify-between gap-4 rounded-control border px-4 py-3 ${
+                      revealedIds.has(question.id) && option.isCorrect
+                        ? 'border-green-600 outline-1 outline-green-600'
+                        : 'border-hairline outline-0'
+                    }`}
+                  >
+                    {option.text}
+                    {revealedIds.has(question.id) && option.isCorrect && (
+                      <span className="text-sm font-bold text-green-600 mt-0.5">Correct</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                variant="secondary"
+                className="self-start"
+                onClick={() => toggleAnswer(question.id)}
+              >
+                {revealedIds.has(question.id) ? 'Hide answer' : 'Show answer'}
+              </Button>
+            </Card>
+          ),
+        )}
 
         {canManage &&
           (addingQuestion ? (
