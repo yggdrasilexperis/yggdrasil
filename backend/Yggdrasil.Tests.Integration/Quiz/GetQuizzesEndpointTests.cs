@@ -88,8 +88,8 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("Ascending", new[] { "apple", "Banana", "cherry", "Date", "Éclair", "fig" })]
-    [InlineData("Descending", new[] { "fig", "Éclair", "Date", "cherry", "Banana", "apple" })]
+    [InlineData("Ascending", new[] { "apple", "Banana", "cherry", "Date", "elderberry", "fig" })]
+    [InlineData("Descending", new[] { "fig", "elderberry", "Date", "cherry", "Banana", "apple" })]
     public async Task GetQuizzes_SortedByTitleWithMixedCase_IgnoresCaseAcrossPages(
     string direction, string[] expected)
     {
@@ -98,7 +98,7 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
             ("apple", BaseDate.AddDays(1), []),
             ("fig", BaseDate.AddDays(2), []),
             ("Banana", BaseDate.AddDays(3), []),
-            ("Éclair", BaseDate.AddDays(4), []),
+            ("elderberry", BaseDate.AddDays(4), []),
             ("cherry", BaseDate.AddDays(5), []));
 
         var titles = new List<string>();
