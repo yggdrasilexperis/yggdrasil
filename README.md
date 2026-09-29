@@ -5,12 +5,23 @@ An app to create and view quizzes
 
 ## Quick start with Docker
 
-Only Docker is needed. Copy the environment file, then fill in `POSTGRES_PASSWORD`,
-`SEED_PASSWORD` and `JWT_SIGNING_KEY` (generate the key with `openssl rand -hex 48`).
+Only Docker and `openssl` are needed.
+
+**1. Environment file.** Copy the example, then set your own `POSTGRES_PASSWORD` and
+`SEED_PASSWORD` in `.env`.
 
 ```bash
 cp .env.example .env
 ```
+
+**2. JWT signing key.** The app signs its tokens with this key and refuses to start
+without one. This generates a key and writes it into `JWT_SIGNING_KEY` in `.env`:
+
+```bash
+sed -i.bak "s/^JWT_SIGNING_KEY=.*/JWT_SIGNING_KEY=$(openssl rand -hex 48)/" .env && rm .env.bak
+```
+
+**3. Start everything.**
 
 ```bash
 docker compose up --build
