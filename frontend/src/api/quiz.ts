@@ -41,7 +41,7 @@ export function addQuestion(quizId: string, question: CreateQuestionRequest): Pr
   return request<Question>(`/api/quizzes/${quizId}/questions`, { method: 'POST', body: question });
 }
 
-export function updateQuestionRequest(
+export function updateQuestion(
   quizId: string,
   questionId: string,
   question: UpdateQuestionRequest,
