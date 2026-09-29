@@ -6,6 +6,7 @@ frontend/dist
 
 # Local configuration and secrets stay on the developer's machine.
 **/.env
+**/.env.bak
 
 # Not needed to build the app.
 .git
