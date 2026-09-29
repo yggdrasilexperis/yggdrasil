@@ -2,12 +2,13 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
-import type { CreateAnswerOptionsRequest, CreateQuestionRequest } from '../api/types';
+import type { CreateAnswerOptionsRequest, CreateQuestionRequest, Question } from '../api/types';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 
 type Props = {
+  question?: Question;
   onSave: (question: CreateQuestionRequest) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
@@ -44,9 +45,14 @@ function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
   return options.filter((option) => option.text.trim() || option.isCorrect);
 }
 
-export function AddQuestionForm({ onSave, onCancel, submitLabel = 'Save question' }: Props) {
-  const [text, setText] = useState('');
-  const [options, setOptions] = useState([blankOption, blankOption]);
+export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save question' }: Props) {
+  const [text, setText] = useState(question?.text ?? '');
+  const [options, setOptions] = useState<CreateAnswerOptionsRequest[]>(
+    question?.answerOptions.map((option) => ({
+      text: option.text,
+      isCorrect: option.isCorrect,
+    })) ?? [blankOption, blankOption],
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);

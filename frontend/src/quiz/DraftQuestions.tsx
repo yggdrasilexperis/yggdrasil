@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import type { CreateQuestionRequest } from '../api/types';
 import { Button } from '../components/Button';
-import { AddQuestionForm } from './AddQuestionForm';
+import { QuestionForm } from './QuestionForm';
 
 type Props = {
   drafts: CreateQuestionRequest[];
@@ -60,7 +60,7 @@ export function DraftQuestions({ drafts, onChange, disabled }: Props) {
       )}
 
       {adding ? (
-        <AddQuestionForm
+        <QuestionForm
           submitLabel="Add question"
           onSave={handleAdd}
           onCancel={() => setAdding(false)}
