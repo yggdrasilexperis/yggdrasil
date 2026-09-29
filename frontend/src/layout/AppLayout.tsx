@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 export function AppLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const onAuthPage = ['/login', '/register'].includes(location.pathname);
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -28,8 +29,11 @@ export function AppLayout() {
               </>
             ) : (
               <>
-    const onAuthPage = ['/login', '/register'].includes(location.pathname);
-    <Link to="/login" state={onAuthPage ? location.state : { from: location.pathname }} className="text-sm text-ink.>
+                <Link
+                  to="/login"
+                  state={onAuthPage ? location.state : { from: location.pathname }}
+                  className="text-sm text-ink"
+                >
                   Sign in
                 </Link>
                 <Link to="/register" className="text-sm text-accent">
