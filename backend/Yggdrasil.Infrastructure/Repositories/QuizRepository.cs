@@ -46,9 +46,9 @@ public class QuizRepository(YggdrasilDbContext dbContext) : IQuizRepository
         IOrderedQueryable<Quiz> ordered = (req.SortBy, req.SortDirection) switch
         {
             (QuizSortField.Title, SortDirection.Ascending) =>
-                query.OrderBy(q => q.Title).ThenBy(q => q.Id),
+                query.OrderBy(q => q.Title.ToLower()).ThenBy(q => q.Id),
             (QuizSortField.Title, SortDirection.Descending) =>
-                query.OrderByDescending(q => q.Title).ThenBy(q => q.Id),
+                query.OrderByDescending(q => q.Title.ToLower()).ThenBy(q => q.Id),
             (QuizSortField.CreatedAt, SortDirection.Ascending) =>
                 query.OrderBy(q => q.CreatedAt).ThenBy(q => q.Id),
             _ => query.OrderByDescending(q => q.CreatedAt).ThenBy(q => q.Id),
