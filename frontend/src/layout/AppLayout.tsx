@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 /** Header + nav shared by every route; the routed page renders into the Outlet. */
 export function AppLayout() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -27,7 +28,7 @@ export function AppLayout() {
               </>
             ) : (
               <>
-                <Link to="/login" className="text-sm text-ink">
+                <Link to="/login" state={{ from: location.pathname }} className="text-sm text-ink">
                   Sign in
                 </Link>
                 <Link to="/register" className="text-sm text-accent">
