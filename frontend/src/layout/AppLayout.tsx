@@ -28,7 +28,8 @@ export function AppLayout() {
               </>
             ) : (
               <>
-                <Link to="/login" state={{ from: location.pathname }} className="text-sm text-ink">
+    const onAuthPage = ['/login', '/register'].includes(location.pathname);
+    <Link to="/login" state={onAuthPage ? location.state : { from: location.pathname }} className="text-sm text-ink.>
                   Sign in
                 </Link>
                 <Link to="/register" className="text-sm text-accent">
