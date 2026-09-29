@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 using Yggdrasil.Application.Abstractions;
 using Yggdrasil.Application.Contracts;
@@ -9,7 +10,7 @@ using Yggdrasil.Domain.Constants;
 
 namespace Yggdrasil.Infrastructure.Identity;
 
-public class IdentityService(UserManager<ApplicationUser> userManager) : IIdentityService
+public class IdentityService(UserManager<ApplicationUser> userManager) : IIdentityService, IUserLookupService
 {
     public async Task<UserResponse?> FindByEmailAsync(string email, CancellationToken cancellationToken)
     {
@@ -48,6 +49,17 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
                 User: null,
                 Errors: result.Errors.Select(e =>
                     new CreateUserResult.Error(e.Code, e.Description)).ToArray());
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetUserNamesAsync(
+        IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var ids = userIds.Distinct().ToList();
+        return await userManager.Users
+            .Where(u => ids.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.UserName!, cancellationToken);
     }
 
     public async Task<bool> CheckPasswordAsync(Guid userId, string password, CancellationToken cancellationToken)

@@ -104,3 +104,43 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+
+  deploy:
+    name: Azure deployment
+    runs-on: ubuntu-latest
+
+    needs: [format, backend, frontend]
+    if: github.ref == 'refs/heads/main' # deploy only after merge to main
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Build frontend and API
+        run: |
+          npm --prefix frontend ci
+          npm --prefix frontend run build
+          dotnet publish backend/Yggdrasil.Api -c Release -r linux-x64 -o publish
+          mkdir -p publish/wwwroot && cp -r frontend/dist/. publish/wwwroot/
+
+        env:
+          VITE_API_BASE_URL: https://yggdrasil-experis.azurewebsites.net
+
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: yggdrasil-experis
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish
+
+      - name: Smoke test
+        run: curl --fail --retry 10 --retry-delay 15 --retry-all-errors https://yggdrasil-experis.azurewebsites.net/api/categories

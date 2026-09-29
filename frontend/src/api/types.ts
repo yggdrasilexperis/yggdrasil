@@ -118,9 +118,20 @@ export type Question = {
   answerOptions: AnswerOption[];
 };
 
+export type CreateAnswerOptionsRequest = {
+  text: string;
+  isCorrect: boolean;
+};
+
+export type CreateQuestionRequest = {
+  text: string;
+  answerOptions: CreateAnswerOptionsRequest[];
+};
+
 export type Comment = {
   id: string;
   authorId: string;
+  authorUsername: string;
   body: string;
   createdAt: string;
   updatedAt: string;

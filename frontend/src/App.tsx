@@ -8,7 +8,6 @@ import { NotFoundPage } from './NotFoundPage';
 import { CreateQuizPage } from './quiz/CreateQuizPage';
 import { DiscoverPage } from './quiz/DiscoverPage';
 import { QuizDetailPage } from './quiz/QuizDetailPage';
-import { QuizEditStub } from './quiz/QuizEditStub';
 
 function App() {
   return (
@@ -20,14 +19,6 @@ function App() {
         <Route path="/" element={<DiscoverPage />} />
         <Route path="/quizzes/:id" element={<QuizDetailPage />} />
 
-        <Route
-          path="/quizzes/:id/edit"
-          element={
-            <RequireAuth>
-              <QuizEditStub />
-            </RequireAuth>
-          }
-        />
         <Route
           path="quizzes/new"
           element={
