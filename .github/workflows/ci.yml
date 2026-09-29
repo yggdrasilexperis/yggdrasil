@@ -105,6 +105,35 @@ jobs:
         run: npm run build
         working-directory: frontend
 
+  docker:
+    name: Docker build and smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create .env as the README does
+        run: |
+          cp .env.example .env
+          sed -i.bak "s/^JWT_SIGNING_KEY=.*/JWT_SIGNING_KEY=$(openssl rand -hex 48)/" .env && rm .env.bak
+          echo "ASPNETCORE_ENVIRONMENT=Production" >> .env
+
+      - name: Start the stack
+        run: docker compose up -d --build
+
+      - name: Smoke test
+        run: |
+          curl --fail --retry 10 --retry-delay 5 --retry-all-errors http://localhost:8080/api/categories
+          curl --fail http://localhost:8080/
+
+      - name: Show logs
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
+
   deploy:
     name: Azure deployment
     runs-on: ubuntu-latest
