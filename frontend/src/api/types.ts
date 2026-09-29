@@ -128,6 +128,8 @@ export type CreateQuestionRequest = {
   answerOptions: CreateAnswerOptionsRequest[];
 };
 
+export type UpdateQuestionRequest = CreateQuestionRequest;
+
 export type Comment = {
   id: string;
   authorId: string;
