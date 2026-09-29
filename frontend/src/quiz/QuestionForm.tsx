@@ -10,7 +10,7 @@ import { Input } from '../components/Input';
 
 type Props = {
   quizId: string;
-  onAdded: (question: Question) => void;
+  onSaved: (question: Question) => void;
   onCancel: () => void;
 };
 
@@ -45,7 +45,7 @@ function dropEmptyOptions(options: CreateAnswerOptionsRequest[]) {
   return options.filter((option) => option.text.trim() || option.isCorrect);
 }
 
-export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
+export function QuestionForm({ quizId, onSaved, onCancel }: Props) {
   const [text, setText] = useState('');
   const [options, setOptions] = useState([blankOption, blankOption]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -83,7 +83,7 @@ export function AddQuestionForm({ quizId, onAdded, onCancel }: Props) {
         text: text.trim(),
         answerOptions: kept.map((option) => ({ ...option, text: option.text.trim() })),
       });
-      onAdded(question);
+      onSaved(question);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setFieldErrors({

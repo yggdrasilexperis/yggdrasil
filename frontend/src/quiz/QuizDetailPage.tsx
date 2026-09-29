@@ -11,9 +11,9 @@ import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
-import { AddQuestionForm } from './AddQuestionForm';
 import { CategoryEditor } from './CategoryEditor';
 import { EditQuizForm } from './EditQuizForm';
+import { QuestionForm } from './QuestionForm';
 
 export function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -248,9 +248,9 @@ export function QuizDetailPage() {
 
         {canManage &&
           (addingQuestion ? (
-            <AddQuestionForm
+            <QuestionForm
               quizId={quiz.id}
-              onAdded={(question) => {
+              onSaved={(question) => {
                 setDetail((prev) => prev && { ...prev, questions: [...prev.questions, question] });
                 setAddingQuestion(false);
               }}
