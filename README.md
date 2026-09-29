@@ -3,6 +3,27 @@
 An app to create and view quizzes
 **Live:** <https://yggdrasil-experis.azurewebsites.net>
 
+## Quick start with Docker
+
+Only Docker is needed. Copy the environment file, then fill in `POSTGRES_PASSWORD`,
+`SEED_PASSWORD` and `JWT_SIGNING_KEY` (generate the key with `openssl rand -hex 48`).
+
+```bash
+cp .env.example .env
+```
+
+```bash
+docker compose up --build
+```
+
+Open <http://localhost:8080> and sign in as `alva@example.com`, `jonas@example.com` or
+`admin@example.com` with your `SEED_PASSWORD`.
+
+Compose starts PostgreSQL, applies the migrations, seeds the demo data and then starts the
+app, which serves the API and the frontend from the same origin. The data lives in the
+`pgdata` volume, so it survives `docker compose down`. Add `--build` again whenever the
+code has changed. For day-to-day development with hot reload, use the setup below instead.
+
 ## Prerequisites
 
 - **.Net SDK**: use the version specified in `global.json`
@@ -137,6 +158,9 @@ command from the wrong project. Pass `--project backend/Yggdrasil.Api`.
 
 **`password authentication failed`**: the password in your user-secrets
 connection string does not match `POSTGRES_PASSWORD` in your `.env`.
+
+**`service "migrate" didn't complete successfully`**: run `docker compose logs migrate`.
+Most often `JWT_SIGNING_KEY` in `.env` is empty or shorter than 32 characters.
 
 **Permission denied on the Docker socket**: your user was added to the `docker`
 group after this shell started. Open a new terminal.
