@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import type { SubmitEvent } from 'react';
-import { Link } from 'react-router-dom';
-
 import type { Comment } from '../api/types';
-import { Button } from '../components/Button';
+import { EditCommentForm } from '../quiz/EditCommentForm';
+import { AddCommentForm } from '../quiz/AddCommentForm';
+import { Link, useLocation } from 'react-router-dom';
+import { CommentActionsMenu } from './CommentActionsMenu';
 
 const relativeTime = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 const fullDate = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' });
@@ -28,81 +27,97 @@ function isEdited(comment: Comment) {
 
 export function CommentSection({
   comments,
+  quizId,
   quizOwnerId,
   canComment,
-  onAdd,
+  removingCommentId,
+  editingCommentId,
+  onAdded,
+  onRemove,
+  onEdit,
+  onCancelEdit,
+  onSaved,
+  isAdmin,
+  currentUserId,
 }: {
   comments: Comment[];
+  quizId: string;
   quizOwnerId: string;
   canComment: boolean;
-  onAdd: (body: string) => void;
+  removingCommentId: string | null;
+  currentUserId: string | undefined;
+  editingCommentId: string | null;
+  isAdmin: boolean;
+  onCancelEdit: () => void;
+  onEdit: (commentId: string) => void;
+  onAdded: (comment: Comment) => void;
+  onRemove: (commentId: string) => void;
+  onSaved: (comment: Comment) => void;
 }) {
-  const [body, setBody] = useState('');
-
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!body.trim()) return;
-    onAdd(body.trim());
-    setBody('');
-  }
+  const location = useLocation();
 
   return (
     <div className="flex flex-col gap-4">
       <h2 className="font-display text-2xl font-semibold tracking-tight">
         Comments {comments.length > 0 && `(${comments.length})`}
       </h2>
-
-      {comments.length === 0 && <p className="text-muted">No comments yet.</p>}
-
-      <ul className="flex flex-col gap-3">
-        {comments.map((comment) => (
-          <li key={comment.id} className="rounded-card border border-hairline p-4">
-            <div className="flex flex-wrap items-center justify-between text-sm text-muted">
-              <div>
-                <span className="font-semibold text-ink">{comment.authorUsername}</span>
-                {comment.authorId === quizOwnerId && (
-                  <span className="ml-2 rounded-control bg-parchment px-2">Quiz author</span>
-                )}
-              </div>
-
-              <time
-                dateTime={comment.createdAt}
-                title={fullDate.format(new Date(comment.createdAt))}
-              >
-                {timeAgo(comment.createdAt)}
-              </time>
-              {isEdited(comment) && (
-                <span title={`Edited ${fullDate.format(new Date(comment.updatedAt))}`}>edited</span>
-              )}
-            </div>
-            <p className="mt-1">{comment.body}</p>
-          </li>
-        ))}
-      </ul>
-
       {canComment ? (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-          <label htmlFor="comment-body" className="text-sm">
-            Add a comment
-          </label>
-          <textarea
-            id="comment-body"
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            className="min-h-24 w-full rounded-control border border-hairline px-4 py-3"
-          />
-          <Button type="submit" className="self-start">
-            Post comment
-          </Button>
-        </form>
+        <AddCommentForm quizId={quizId} onAdded={onAdded} />
       ) : (
         <p className="text-sm text-muted">
-          <Link to="/login" className="text-accent">
+          <Link to="/login" state={{ from: location.pathname }} className="text-accent">
             Sign in
           </Link>{' '}
           to leave a comment.
         </p>
       )}
+      {comments.length === 0 && <p className="text-muted">No comments yet.</p>}
+
+      <ul className="flex flex-col gap-3">
+        {comments.map((comment) => (
+          <li key={comment.id} className="rounded-card border border-hairline p-4">
+            <div className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-semibold text-ink">{comment.authorUsername}</span>
+                {comment.authorId === quizOwnerId && (
+                  <span className="rounded-control bg-parchment px-2">Quiz author</span>
+                )}
+                <time
+                  dateTime={comment.createdAt}
+                  title={fullDate.format(new Date(comment.createdAt))}
+                >
+                  {timeAgo(comment.createdAt)}
+                </time>
+                {isEdited(comment) && (
+                  <span title={`Edited ${fullDate.format(new Date(comment.updatedAt))}`}>
+                    edited
+                  </span>
+                )}
+              </div>
+              <div className="self-end sm:self-auto">
+                <CommentActionsMenu
+                  canEdit={comment.authorId === currentUserId && editingCommentId !== comment.id}
+                  canRemove={comment.authorId === currentUserId || isAdmin}
+                  removing={removingCommentId === comment.id}
+                  onEdit={() => onEdit(comment.id)}
+                  onRemove={() => onRemove(comment.id)}
+                />
+              </div>
+            </div>
+            {editingCommentId === comment.id ? (
+              <EditCommentForm
+                quizId={quizId}
+                commentId={comment.id}
+                initialBody={comment.body}
+                onSaved={onSaved}
+                onCancel={onCancelEdit}
+              />
+            ) : (
+              <p className="mt-1">{comment.body}</p>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

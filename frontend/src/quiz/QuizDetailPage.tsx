@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiError } from '../api/ApiError';
-import { deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
+import { deleteComment, deleteQuestion, deleteQuiz, getQuizDetail } from '../api/quiz';
 import { DIFFICULTY_LABELS } from '../api/types';
-import type { Comment, QuizDetail } from '../api/types';
+import type { QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -23,14 +23,15 @@ export function QuizDetailPage() {
   const [detail, setDetail] = useState<QuizDetail | null>(null);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(false);
-  /** No POST /comments endpoint exists yet — comments posted here live only in memory and are gone on reload. */
-  const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [removingCommentId, setRemovingCommentId] = useState<string | null>(null);
   const [editingQuiz, setEditingQuiz] = useState(false);
   const [editingCategories, setEditingCategories] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [addingQuestion, setAddingQuestion] = useState(false);
   const [removingQuestionId, setRemovingQuestionId] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState('');
+  const [commentError, setCommentError] = useState('');
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -94,20 +95,22 @@ export function QuizDetailPage() {
     });
   }
 
-  function handleAddComment(body: string) {
-    if (!user) return;
-    const now = new Date().toISOString();
-    setLocalComments((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        authorId: user.id,
-        authorUsername: user.userName,
-        body,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ]);
+  async function handleRemoveComment(commentId: string) {
+    if (!id || !window.confirm('Remove this comment?')) return;
+    setCommentError('');
+    setRemovingCommentId(commentId);
+    try {
+      await deleteComment(id, commentId);
+      setDetail(
+        (prev) => prev && { ...prev, comments: prev.comments.filter((q) => q.id !== commentId) },
+      );
+    } catch (err) {
+      setCommentError(
+        err instanceof ApiError ? err.detail || err.title : 'Could not remove this comment',
+      );
+    } finally {
+      setRemovingCommentId(null);
+    }
   }
 
   if (error && !detail) {
@@ -128,7 +131,6 @@ export function QuizDetailPage() {
 
   const { quiz, questions } = detail;
   const canManage = user?.id === quiz.ownerId || isAdmin;
-  const comments = [...detail.comments, ...localComments];
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
@@ -267,12 +269,39 @@ export function QuizDetailPage() {
           ))}
       </div>
 
-      <CommentSection
-        comments={comments}
-        quizOwnerId={quiz.ownerId}
-        canComment={!!user}
-        onAdd={handleAddComment}
-      />
+      <div className="flex flex-col gap-4">
+        <CommentSection
+          comments={detail.comments}
+          quizId={quiz.id}
+          quizOwnerId={quiz.ownerId}
+          currentUserId={user?.id}
+          isAdmin={isAdmin}
+          canComment={!!user}
+          removingCommentId={removingCommentId}
+          editingCommentId={editingCommentId}
+          onAdded={(comment) =>
+            setDetail((prev) => prev && { ...prev, comments: [...prev.comments, comment] })
+          }
+          onRemove={handleRemoveComment}
+          onEdit={(commentId) => setEditingCommentId(commentId)}
+          onCancelEdit={() => setEditingCommentId(null)}
+          onSaved={(comment) => {
+            setDetail(
+              (prev) =>
+                prev && {
+                  ...prev,
+                  comments: prev.comments.map((c) => (c.id === comment.id ? comment : c)),
+                },
+            );
+            setEditingCommentId(null);
+          }}
+        />
+        {commentError && (
+          <p role="alert" className="text-sm text-red-600">
+            {commentError}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
