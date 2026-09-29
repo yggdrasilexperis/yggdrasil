@@ -1,0 +1,20 @@
+# Build output and dependencies are recreated inside the image.
+**/bin
+**/obj
+**/node_modules
+frontend/dist
+
+# Local configuration and secrets stay on the developer's machine.
+**/.env
+
+# Not needed to build the app.
+.git
+.github
+.githooks
+.claude
+**/.DS_Store
+**/*.md
+backend/Yggdrasil.Tests.*
+Dockerfile
+.dockerignore
+docker-compose.yml
