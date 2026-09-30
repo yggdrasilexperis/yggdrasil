@@ -14,8 +14,8 @@ Arrows point at what you may depend on. `Api` references `Infrastructure` only
 so `Program.cs` can register implementations in DI. A reference wanting to point
 the other way means the code is in the wrong project.
 
-`backend/README.md` has the "where does my code go" table; each project has its
-own `README.md`.
+`backend/README.md` lists what each project holds; each project has its own
+`README.md` with its folders.
 
 ## Branches and commits
 
