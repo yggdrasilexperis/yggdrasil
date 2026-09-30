@@ -137,48 +137,58 @@ export function QuizDetailPage() {
   const canManage = user?.id === quiz.ownerId || isAdmin;
   const comments = [...detail.comments, ...localComments];
 
+  const meta = (
+    <div className="mt-3 flex items-center gap-2 text-sm text-muted">
+      <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
+      {quiz.categories.length > 0 && <span>·</span>}
+      {quiz.categories.map((category) => (
+        <Link key={category.categoryId} to={`/?category=${category.slug}`} className="text-accent">
+          {category.name}
+        </Link>
+      ))}
+    </div>
+  );
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
       <div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
-        {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
-        <div className="mt-3 flex items-center gap-2 text-sm text-muted">
-          <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
-          {quiz.categories.length > 0 && <span>·</span>}
-          {quiz.categories.map((category) => (
-            <Link
-              key={category.categoryId}
-              to={`/?category=${category.slug}`}
-              className="text-accent"
-            >
-              {category.name}
-            </Link>
-          ))}
-        </div>
+        {canManage && editingQuiz ? (
+          <EditQuizForm
+            quiz={quiz}
+            onSaved={(updatedQuiz) => {
+              setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
+              setEditingQuiz(false);
+            }}
+            onCancel={() => setEditingQuiz(false)}
+          >
+            {meta}
+          </EditQuizForm>
+        ) : (
+          <>
+            <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
+            {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
+            {meta}
 
-        {canManage && (
-          <div className="mt-4 flex gap-3">
-            <Button variant="secondary" onClick={() => setEditingQuiz(true)} disabled={editingQuiz}>
-              Edit
-            </Button>
+            {canManage && (
+              <div className="mt-4 flex gap-3">
+                <Button variant="secondary" onClick={() => setEditingQuiz(true)}>
+                  Edit
+                </Button>
 
-            <Button variant="utility" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : 'Delete'}
-            </Button>
-          </div>
-        )}
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditingCategories(true)}
+                  disabled={editingCategories}
+                >
+                  Edit categories
+                </Button>
 
-        {canManage && editingQuiz && (
-          <div className="mt-4">
-            <EditQuizForm
-              quiz={quiz}
-              onSaved={(updatedQuiz) => {
-                setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
-                setEditingQuiz(false);
-              }}
-              onCancel={() => setEditingQuiz(false)}
-            />
-          </div>
+                <Button variant="utility" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         {/* This can later be placed in the Edit page/ component */}

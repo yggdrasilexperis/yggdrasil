@@ -1,17 +1,17 @@
-import { useId, useState } from 'react';
-import type { SubmitEvent } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent, ReactNode, SubmitEvent } from 'react';
 
 import { ApiError } from '../api/ApiError';
 import { updateQuiz } from '../api/quiz';
 import type { QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
-import { Input } from '../components/Input';
 
 type Props = {
   quiz: QuizSummary;
   onSaved: (quiz: QuizSummary) => void;
   onCancel: () => void;
+  /** Shown between the fields and the buttons, so what sits under the title keeps its place. */
+  children?: ReactNode;
 };
 
 type FieldErrors = {
@@ -31,14 +31,28 @@ function validate(title: string, description: string): FieldErrors {
   return errors;
 }
 
-export function EditQuizForm({ quiz, onSaved, onCancel }: Props) {
-  const descriptionId = useId();
+/**
+ * Takes the place of the quiz's title and description on the detail page while editing.
+ * The fields have no box of their own: they keep the heading's and paragraph's type and
+ * position, so the text stays where it was and only the focus ring shows where you type.
+ */
+export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
+  const titleErrorId = useId();
+  const descriptionErrorId = useId();
 
   const [title, setTitle] = useState(quiz.title);
   const [description, setDescription] = useState(quiz.description ?? '');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+
+  // Put the caret after the title, not before it, so typing picks up where the title ends.
+  useEffect(() => {
+    const titleField = titleRef.current;
+    titleField?.focus();
+    titleField?.setSelectionRange(titleField.value.length, titleField.value.length);
+  }, []);
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,50 +83,75 @@ export function EditQuizForm({ quiz, onSaved, onCancel }: Props) {
     }
   }
 
+  // The title is a textarea so a long one wraps like the heading does; Enter still saves.
+  function handleTitleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key === 'Escape' && !saving) onCancel();
+  }
+
+  // field-sizing makes each box exactly as tall as its text. Chrome still reports 1px to
+  // scroll and flashes a scrollbar, so hide overflow, but only where the box can grow.
+  const field =
+    'block w-full resize-none rounded-control bg-transparent field-sizing-content placeholder:text-muted supports-field-sizing:overflow-hidden';
+
   return (
-    <Card>
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        {formError && (
-          <p role="alert" className="text-sm text-red-600">
-            {formError}
-          </p>
-        )}
+    <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} noValidate>
+      <textarea
+        aria-label="Title"
+        ref={titleRef}
+        placeholder="Title"
+        rows={1}
+        value={title}
+        onChange={(event) => setTitle(event.target.value.replace(/[\r\n]+/g, ' '))}
+        onKeyDown={handleTitleKeyDown}
+        aria-invalid={fieldErrors.title ? true : undefined}
+        aria-describedby={fieldErrors.title ? titleErrorId : undefined}
+        className={`${field} font-display text-4xl font-semibold tracking-tight`}
+      />
+      {fieldErrors.title && (
+        <p id={titleErrorId} className="mt-2 text-sm text-red-600">
+          {fieldErrors.title}
+        </p>
+      )}
 
-        <Input
-          label="Title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          error={fieldErrors.title}
-        />
+      <textarea
+        aria-label="Description"
+        placeholder="Add a description"
+        rows={1}
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
+        aria-invalid={fieldErrors.description ? true : undefined}
+        aria-describedby={fieldErrors.description ? descriptionErrorId : undefined}
+        className={`${field} mt-2`}
+      />
+      {fieldErrors.description && (
+        <p id={descriptionErrorId} className="mt-2 text-sm text-red-600">
+          {fieldErrors.description}
+        </p>
+      )}
 
-        <div>
-          <label htmlFor={descriptionId} className="mb-2 block text-sm">
-            Description <span className="text-muted">(optional)</span>
-          </label>
-          <textarea
-            id={descriptionId}
-            rows={4}
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            aria-invalid={fieldErrors.description ? true : undefined}
-            className={`w-full rounded-control border px-4 py-4 ${
-              fieldErrors.description ? 'border-red-600' : 'border-hairline'
-            }`}
-          />
-          {fieldErrors.description && (
-            <p className="mt-2 text-sm text-red-600">{fieldErrors.description}</p>
-          )}
-        </div>
+      {children}
 
-        <div className="flex gap-3">
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
-          <Button variant="secondary" onClick={onCancel} disabled={saving}>
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </Card>
+      <div className="mt-4 flex gap-3">
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+        <Button variant="secondary" onClick={onCancel} disabled={saving}>
+          Cancel
+        </Button>
+      </div>
+
+      {formError && (
+        <p role="alert" className="mt-3 text-sm text-red-600">
+          {formError}
+        </p>
+      )}
+    </form>
   );
 }
