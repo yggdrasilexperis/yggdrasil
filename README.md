@@ -1,177 +1,94 @@
 # Yggdrasil
 
-An app to create and view quizzes
+A quiz app. You sign up, build quizzes out of multiple-choice questions, tag them
+with categories, browse and filter everyone's quizzes, and comment on them. Admins
+can clean up any quiz or comment.
+
 **Live:** <https://yggdrasil-experis.azurewebsites.net>
 
-## Quick start with Docker
+## Run it locally
 
-Only Docker and `openssl` are needed.
-
-**1. Environment file.** Copy the example, then set your own `POSTGRES_PASSWORD` and
-`SEED_PASSWORD` in `.env`.
+You need Docker and `openssl`. Copy the env file, then open `.env` and set your own
+`POSTGRES_PASSWORD` and `SEED_PASSWORD`:
 
 ```bash
 cp .env.example .env
 ```
 
-**2. JWT signing key.** The app signs its tokens with this key and refuses to start
-without one. This generates a key and writes it into `JWT_SIGNING_KEY` in `.env`:
+Generate a JWT signing key into `.env`:
 
 ```bash
 sed -i.bak "s/^JWT_SIGNING_KEY=.*/JWT_SIGNING_KEY=$(openssl rand -hex 48)/" .env && rm .env.bak
 ```
 
-**3. Start everything.**
+Start everything:
 
 ```bash
 docker compose up --build
 ```
 
-Open <http://localhost:8080> and sign in as `alva@example.com`, `jonas@example.com` or
-`admin@example.com` with your `SEED_PASSWORD`.
+This starts Postgres, runs the migrations, seeds demo data and serves the app on
+<http://localhost:8080>. Log in as `alva@example.com`, `jonas@example.com` or
+`admin@example.com` with your `SEED_PASSWORD`. Your data survives
+`docker compose down`, and `docker compose down -v` wipes it.
 
-Compose starts PostgreSQL, applies the migrations, seeds the demo data and then starts the
-app, which serves the API and the frontend from the same origin. The data lives in the
-`pgdata` volume, so it survives `docker compose down`. Add `--build` again whenever the
-code has changed. For day-to-day development with hot reload, use the setup below instead.
+## Run the tests
 
-## Prerequisites
-
-- **.Net SDK**: use the version specified in `global.json`
-- **Node.js 24+**
-- **Docker** with Compose, for the database
-
-## First-time setup
-
-**0. Clone the repo**
+You need the .NET SDK version from `global.json`, and Docker has to be running
+because the integration tests start their own Postgres container.
 
 ```bash
-git clone git@github.com:yggdrasilexperis/yggdrasil.git
-```
-
-**1. Environment file.** Copy the example and set your own password.
-
-```bash
-cp .env.example .env
-```
-
-**2. Start the database.**
-
-```bash
-docker compose up -d db
-```
-
-**3. Restore the local tools**
-
-```bash
-dotnet tool restore
-```
-
-**4. Tell the API how to reach the database.** The connection string is a
-secret, so it lives outside the repository. Into the command insert the password you have in `.env`
-
-```bash
-dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=yggdrasil;Username=yggdrasil;Password=<your .env password>" --project backend/Yggdrasil.Api
-```
-
-**5. Configure the JWT issuer signing key.** The API signs every token it issues
-with this key and refuses to start without one. It is per-developer. Generate
-your own, never commit or share it.
-
-> [!IMPORTANT]
-> **Prerequisite:** `openssl`
->
-> > Bundled with Git for Windows (use Git Bash), preinstalled on macOS and most Linux distributions.
-
-```bash
-dotnet user-secrets set "Jwt:IssuerSigningKey" "$(openssl rand -hex 48)" --project backend/Yggdrasil.Api
-```
-
-**6. Create the schema.**
-
-```bash
-dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
-```
-
-**7. Seed database.** Pick a password for the seed users and store it, then seed.
-
-```bash
-dotnet user-secrets set "Seed:Password" "<pick one>" --project backend/Yggdrasil.Api
-```
-
-```bash
-dotnet run --project backend/Yggdrasil.Api -- --seed
-```
-
-This creates `alva@example.com`, `jonas@example.com` and `admin@example.com`, all with the password you just set.
-
-**8. Install frontend dependencies.**
-
-```bash
-npm --prefix frontend install
-```
-
-**9. Frontend environment file.** Copy the example and set the backend URL
-
-```bash
-cp frontend/.env.example frontend/.env
-```
-
-## Running it
-
-Run each command in seperate terminals
-
-```bash
-docker compose up -d db
-```
-
-```bash
-dotnet watch --project backend/Yggdrasil.Api
-```
-
-```bash
-npm --prefix frontend run dev
-```
-
-- API lives at <http://localhost:5172>
-- OpenAPI documents live at <http://localhost:5172/openapi/v1.json>
-- Frontend lives at: <http://localhost:5173>
-
-`backend/Yggdrasil.Api/Yggdrasil.Api.http` has ready requests you can run without needing frontend
-
-## Everyday commands
-
-```bash
-# tests
 dotnet test backend/Yggdrasil.sln
-
-# formatting
-dotnet format backend/Yggdrasil.sln --exclude backend/Yggdrasil.Infrastructure/Migrations
-npm --prefix frontend run format
-npm --prefix frontend run lint
-
-# a new migration
-dotnet ef migrations add <Name> --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
-dotnet ef database update --project backend/Yggdrasil.Infrastructure --startup-project backend/Yggdrasil.Api
 ```
 
-Stop the db with `docker compose down`. This DOES keep your data.
+The frontend has no tests. CI checks it with lint, formatting and a build.
 
-Destroy the volume with `docker compose down -v`. This DOES NOT keep your data.
+## Environment variables
 
-## Troubleshooting
+These live in `.env`:
 
-**`Could not find the global property 'UserSecretsId'`**: you are running the
-command from the wrong project. Pass `--project backend/Yggdrasil.Api`.
+| Variable | What it's for |
+|---|---|
+| `POSTGRES_PASSWORD` | Database password. Required. |
+| `JWT_SIGNING_KEY` | Signs login tokens. Required, at least 32 characters. |
+| `SEED_PASSWORD` | Password for the three demo users. Required. |
+| `POSTGRES_DB`, `POSTGRES_USER` | Database name and user. Both default to `yggdrasil`. |
+| `POSTGRES_PORT`, `APP_PORT` | Ports on your machine. Default `5432` and `8080`. |
 
-**Connection refused from the API**: the database container is not running.
-`docker compose ps` to check, `docker compose up -d db` to start it.
+Compose hands these to the app as `ConnectionStrings__Postgres`,
+`Jwt__IssuerSigningKey`, `Seed__Password` and `Cors__AllowedOrigins__0`. Those are
+the names to set anywhere else, like on Azure. The frontend also needs
+`VITE_API_BASE_URL` at build time, which Docker and CI set for you.
 
-**`password authentication failed`**: the password in your user-secrets
-connection string does not match `POSTGRES_PASSWORD` in your `.env`.
+## Architecture
 
-**`service "migrate" didn't complete successfully`**: run `docker compose logs migrate`.
-Most often `JWT_SIGNING_KEY` in `.env` is empty or shorter than 32 characters.
+- **Frontend:** React and TypeScript, built with Vite. More in
+  [frontend/README.md](frontend/README.md).
+- **Backend:** ASP.NET Core minimal API on .NET 10, with EF Core, ASP.NET Core
+  Identity and JWT login. Split into Api, Application, Domain and Infrastructure,
+  see [backend/README.md](backend/README.md).
+- **Database:** PostgreSQL 17. A Docker container locally, Azure Database for
+  PostgreSQL in production.
+- **Deployment:** The API serves the built frontend, so it all runs as one app.
+  GitHub Actions checks formatting, builds, runs the tests and smoke-tests the
+  Docker image on every PR. Merging to `main` deploys to Azure App Service.
 
-**Permission denied on the Docker socket**: your user was added to the `docker`
-group after this shell started. Open a new terminal.
+How we work (branches, PRs, secrets) is in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Team
+
+- Izaak Krystian Sarnecki
+- Fredrik Andreas Wiik
+- Markus Anglero
+
+## Domain mapping
+
+The assignment is written against five placeholders. This is what we picked:
+
+| Placeholder | Ours |
+| --- | --- |
+| `[USER]` | User, handled by ASP.NET Core Identity |
+| `[PRIMARY]` | Quiz, owned by one user |
+| `[CHILD]` | Question, belongs to one quiz and has answer options |
+| `[TAG]` | Category, many-to-many with quizzes |
+| `[INTERACTION]` | Comment, left by a user on a quiz |
