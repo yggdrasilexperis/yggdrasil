@@ -4,7 +4,7 @@ using Yggdrasil.Application.Contracts.Quiz;
 
 namespace Yggdrasil.Application.Validation;
 
-public sealed class UpdateCommentRequestValidator : AbstractValidator<CreateCommentRequest>
+public sealed class UpdateCommentRequestValidator : AbstractValidator<UpdateCommentRequest>
 {
     public UpdateCommentRequestValidator()
     {

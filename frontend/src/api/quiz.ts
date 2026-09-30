@@ -1,11 +1,14 @@
 import { request } from './client';
 import type {
+  CreateCommentRequest,
   CreateQuestionRequest,
   GetQuizzesRequest,
   PagedResult,
   Question,
   QuizDetail,
+  Comment,
   QuizSummary,
+  UpdateCommentRequest,
   UpdateQuestionRequest,
   UpdateQuizRequest,
 } from './types';
@@ -54,4 +57,21 @@ export function updateQuestion(
 
 export function deleteQuestion(quizId: string, questionId: string): Promise<void> {
   return request<void>(`/api/quizzes/${quizId}/questions/${questionId}`, { method: 'DELETE' });
+}
+
+export function deleteComment(quizId: string, commentId: string): Promise<void> {
+  return request<void>(`/api/quizzes/${quizId}/comments/${commentId}`, { method: 'DELETE' });
+}
+export function updateComment(
+  quizId: string,
+  commentId: string,
+  comment: UpdateCommentRequest,
+): Promise<Comment> {
+  return request<Comment>(`/api/quizzes/${quizId}/comments/${commentId}`, {
+    method: 'PUT',
+    body: comment,
+  });
+}
+export function addComment(quizId: string, comment: CreateCommentRequest): Promise<Comment> {
+  return request<Comment>(`/api/quizzes/${quizId}/comments`, { method: 'POST', body: comment });
 }
