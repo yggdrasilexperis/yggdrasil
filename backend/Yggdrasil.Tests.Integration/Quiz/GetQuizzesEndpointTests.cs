@@ -87,6 +87,32 @@ public sealed class GetQuizzesEndpointTests(ApiFactory factory) : IAsyncLifetime
         page!.Items.Select(q => q.Title).ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData("Ascending", new[] { "apple", "Banana", "cherry", "Date", "elderberry", "fig" })]
+    [InlineData("Descending", new[] { "fig", "elderberry", "Date", "cherry", "Banana", "apple" })]
+    public async Task GetQuizzes_SortedByTitleWithMixedCase_IgnoresCaseAcrossPages(
+    string direction, string[] expected)
+    {
+        await SeedQuizzesAsync(
+            ("Date", BaseDate, []),
+            ("apple", BaseDate.AddDays(1), []),
+            ("fig", BaseDate.AddDays(2), []),
+            ("Banana", BaseDate.AddDays(3), []),
+            ("elderberry", BaseDate.AddDays(4), []),
+            ("cherry", BaseDate.AddDays(5), []));
+
+        var titles = new List<string>();
+        foreach (var pageNumber in new[] { 1, 2 })
+        {
+            var response = await _client.GetAsync(
+                $"{Url}?sortBy=Title&sortDirection={direction}&page={pageNumber}&pageSize=3");
+            var page = await response.Content.ReadFromJsonAsync<PagedResult<QuizResponse>>();
+            titles.AddRange(page!.Items.Select(q => q.Title));
+        }
+
+        titles.ShouldBe(expected);
+    }
+
     [Fact]
     public async Task GetQuizzes_FilteredByCategorySlug_CombinesCorrectlyWithPaging()
     {
