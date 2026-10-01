@@ -147,6 +147,17 @@ free-floating card.
     focus.
   - Below `md` the columns fold into a line under the title, and the toolbar's sort menu
     stands in for the headers.
+  - Every row is the same height (two lines from `md` up, three stacked), and every line
+    is cut short with an ellipsis rather than wrapped. A missing description leaves its
+    line blank.
+  - The pane is always a full page of rows tall, so the window never resizes. Loading,
+    errors and "no results" sit in the empty pane. Where four or more rows are missing,
+    `TreeMessage` draws the world tree (`worldTree`, the one illustration in
+    `pixelArt.ts`, at scale 4) with a line under it. It is drawn tone on tone in
+    the window greys (`dim` outline), a step lighter than the caption, so it sits behind it.
+  - The toolbar and status bar don't change height either. Active filters scroll
+    sideways on one line rather than wrapping, and Clear all and the page buttons grey
+    out instead of disappearing.
 - **`Button`** has three variants that share one bevel:
   - `primary` is the default action, with a 1px black rim.
   - `secondary` is a plain button.

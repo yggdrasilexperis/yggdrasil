@@ -21,7 +21,58 @@ const PALETTE: Record<string, string> = {
   e: '#e8b24a',
   E: '#9c6a14',
   h: '#fff7cf',
+  // A grey ramp for drawings that sit behind the text: dim, between, face, light.
+  '1': '#8a867d',
+  '2': '#b9b5ac',
+  '3': '#d4d0c8',
+  '4': '#e8e5de',
 };
+
+/**
+ * An illustration rather than an icon: the world tree, roots and all, drawn at scale 4. It is
+ * kept in colour here, which is easier to read and edit, and shown in greys (`toTones`).
+ */
+const WORLD_TREE = [
+  '..............kkkk..............',
+  '............kkLLLGkk............',
+  '.......kkkkkLLLLGGGGkkkkk.......',
+  '.....kkLGGGLLLLLGGGGGDGGGkk.....',
+  '....kLLLLGGLLLLLLGGGGDLGGGGk....',
+  '....kLLLLLGLLLLLLGGGGGDLGGGk....',
+  '...kGLLLLLGLLLLLGGGGGGDLGGGGk...',
+  '...kGLLLLGGGGLLGGGGGGGDGGGGGk...',
+  '...kGGGGGGGGGGGGGGDGDDDGGGGDk...',
+  '..kLLGGGDGGGGLLLGGGDDDDGLLGGGk..',
+  '.kLLLLGGGDDGLLLLLGGGDDDLLLLGGGk.',
+  'kLLLLLGGGGGLLLLLLGGGGDGDLLLGGGGk',
+  'kGLLLLGLLLGGLLLLGGGGGDGGGDLGGGGk',
+  'kGLLLGLLLLGGGLLGGGGGGDGGGGDGGGGk',
+  'kGGGGGLLLLLGGGGGGGGGDDLGGGDGGGDk',
+  'kGGGGGLLLLGGGGGGGGDDDDGGGGGDDDDk',
+  '.kGGGGGGGGGDGGGGDDDDDDGGGGDDDDk.',
+  '..kGDDGGGGGGDGGDDDDDDGGGDDDDDk..',
+  '...kkkGGGGDDDDDDDDDDGGDDDDkkk...',
+  '......kGGDDDDttttTTGGDDDDk......',
+  '.......kkDDkkttttTTkkDDkk.......',
+  '.........kk.kttttTTk.kk.........',
+  '............kttttTTk............',
+  '............kttttTTk............',
+  '............kttttTTk............',
+  '............kttttTTk............',
+  '...........ktttttTTTk...........',
+  '..........kttttttTTTTk..........',
+  '.......kkktttttttTTTTTkkk.......',
+  '....kkkttttTktttTTTktTTTTkkk....',
+  '..kktttttTkkkkttTTkkkktTTTTTkk..',
+  '.ktttTkkkk....ktTk....kkkktTTTk.',
+  '.kkkkk.........kk.........kkkkk.',
+];
+
+/** Tone on tone, like the desktop wallpaper: each colour becomes the grey of the same depth. */
+function toTones(rows: string[]): string[] {
+  const tones: Record<string, string> = { k: '1', D: '2', T: '2', G: '3', t: '3', L: '4' };
+  return rows.map((row) => row.replace(/./g, (key) => tones[key] ?? '.'));
+}
 
 /** One string per row, one character per pixel; `.` is transparent. */
 const ART = {
@@ -187,6 +238,7 @@ const ART = {
     '................',
     '................',
   ],
+  worldTree: toTones(WORLD_TREE),
   // Small glyphs, drawn in the text colour.
   minimize: ['........', '........', '........', '........', '........', '.cccccc.', '.cccccc.'],
   maximize: [

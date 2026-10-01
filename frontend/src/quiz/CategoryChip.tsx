@@ -5,7 +5,7 @@ type Props = { name: string; removeLabel: string; onRemove: () => void };
 /** A chosen category, in the selection highlight, with a close box to let it go. */
 export function CategoryChip({ name, removeLabel, onRemove }: Props) {
   return (
-    <li className="flex h-7 items-center gap-1 bg-accent pr-0.5 pl-2 text-white">
+    <li className="flex h-7 shrink-0 items-center gap-1 bg-accent pr-0.5 pl-2 text-white">
       {name}
       <button
         type="button"

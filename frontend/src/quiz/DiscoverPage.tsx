@@ -10,11 +10,15 @@ import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
 import { Select } from '../components/Select';
 import { Window } from '../components/Window';
+import { ActiveFilters } from './ActiveFilters';
 import { CategoryFilter } from './CategoryFilter';
 import { Pager } from './Pager';
 import { QuizList } from './QuizList';
+import { TreeMessage } from './TreeMessage';
 
 const PAGE_SIZE = 9;
+/** Empty rows a short page needs before the tree is drawn in them. */
+const TREE_ROWS = 4;
 const DEFAULT_SORT: QuizSort = 'newest';
 
 function readSort(value: string | null): QuizSort {
@@ -104,7 +108,30 @@ export function DiscoverPage() {
     setReloadKey((k) => k + 1);
   }
 
-  const hasItems = !error && result && result.items.length > 0;
+  const shown = error ? null : result;
+  const items = shown?.items ?? [];
+  const filtered = selected.length > 0;
+
+  /** What fills the list where rows are missing. */
+  function paneMessage() {
+    if (error) return <ErrorState message={error} onRetry={retry} />;
+    if (!result) return <Loading label="Loading quizzes…" className="w-full max-w-xs" />;
+    if (items.length === 0) {
+      return filtered ? (
+        <TreeMessage title="No quizzes here">None match every category you picked.</TreeMessage>
+      ) : (
+        <TreeMessage title="No quizzes yet">Be the first to create one.</TreeMessage>
+      );
+    }
+    if (items.length <= PAGE_SIZE - TREE_ROWS) {
+      return (
+        <TreeMessage title="You've reached the roots">
+          {filtered ? "That's every quiz that matches your filter." : "That's every quiz there is."}
+        </TreeMessage>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -113,19 +140,25 @@ export function DiscoverPage() {
         icon="folder"
         flush
         toolbar={
-          <>
-            {categories.length > 0 && (
-              <CategoryFilter
-                categories={categories}
-                selected={selected}
-                onChange={handleFilterChange}
-              />
-            )}
+          // One row from `sm` up. Below that the two menus share a row, and the active
+          // filters have the second to themselves.
+          <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:items-center">
+            <CategoryFilter
+              categories={categories}
+              selected={selected}
+              onChange={handleFilterChange}
+            />
+            <ActiveFilters
+              categories={categories}
+              selected={selected}
+              onChange={handleFilterChange}
+              className="col-span-2 row-start-2 sm:flex-1"
+            />
             <Select
               aria-label="Sort quizzes"
               value={sort}
               onChange={(event) => handleSortChange(event.target.value as QuizSort)}
-              className="ml-auto self-start"
+              className="col-start-2 row-start-1"
             >
               {Object.entries(QUIZ_SORTS).map(([key, option]) => (
                 <option key={key} value={key}>
@@ -133,34 +166,20 @@ export function DiscoverPage() {
                 </option>
               ))}
             </Select>
-          </>
+          </div>
         }
         status={
-          hasItems && (
-            <Pager
-              page={result.page}
-              totalPages={result.totalPages}
-              totalCount={result.totalCount}
-              onChange={handlePageChange}
-            />
-          )
+          <Pager
+            page={shown?.page ?? page}
+            totalPages={shown?.totalPages}
+            totalCount={shown?.totalCount}
+            onChange={handlePageChange}
+          />
         }
       >
-        {error && <ErrorState message={error} onRetry={retry} className="p-3 sm:p-5" />}
-        {!error && result?.items === null && (
-          <Loading label="Loading quizzes…" className="p-3 sm:p-5" />
-        )}
-        {!error && result?.items?.length === 0 && (
-          <p className="bg-white px-4 py-16 text-center text-muted shadow-field">
-            {selected.length > 0
-              ? 'No quizzes match every category you picked.'
-              : 'No quizzes yet. Be the first to create one.'}
-          </p>
-        )}
-
-        {hasItems && (
-          <QuizList quizzes={result.items} sort={sort} onSortChange={handleSortChange} />
-        )}
+        <QuizList quizzes={items} rows={PAGE_SIZE} sort={sort} onSortChange={handleSortChange}>
+          {paneMessage()}
+        </QuizList>
       </Window>
     </div>
   );

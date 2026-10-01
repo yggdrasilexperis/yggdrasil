@@ -7,7 +7,7 @@ type Props = {
    * Screen pixels per art pixel. 1.5 is the UI's grid: the same size as a pixel of the
    * font, and whole device pixels on the 2x screens this is mostly read on.
    */
-  scale?: 1.5 | 2 | 3;
+  scale?: 1.5 | 2 | 3 | 4;
   className?: string;
 };
 
