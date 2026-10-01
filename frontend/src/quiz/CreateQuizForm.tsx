@@ -8,6 +8,7 @@ import { DIFFICULTY_LABELS } from '../api/types';
 import type { Category, CreateQuestionRequest, Difficulty, QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { Select } from '../components/Select';
 import { CategoryPicker } from './CategoryPicker';
 import { DraftQuestions } from './DraftQuestions';
 import { UnsavedQuestionsNotice } from './UnsavedQuestionsNotice';
@@ -136,9 +137,6 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
     else onCreated(quiz);
   }
 
-  const field = (error?: string) =>
-    `w-full rounded-control border px-4 ${error ? 'border-red-600' : 'border-hairline'}`;
-
   if (partialFailure) {
     return <UnsavedQuestionsNotice quiz={partialFailure.quiz} failed={partialFailure.failed} />;
   }
@@ -151,10 +149,10 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
   }
 
   return (
-    <div className="mt-6 flex flex-col gap-8">
-      <form onSubmit={handleSubmit} noValidate id={QUIZ_FORM_ID} className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
+      <form onSubmit={handleSubmit} noValidate id={QUIZ_FORM_ID} className="flex flex-col gap-5">
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-danger">
             {formError}
           </p>
         )}
@@ -167,7 +165,7 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
         />
 
         <div>
-          <label htmlFor={descriptionId} className="mb-2 block text-sm">
+          <label htmlFor={descriptionId} className="mb-1 block">
             Description <span className="text-muted">(optional)</span>
           </label>
           <textarea
@@ -176,23 +174,25 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             aria-invalid={fieldErrors.description ? true : undefined}
-            className={`${field(fieldErrors.description)} py-4`}
+            className={`block w-full bg-white px-2 py-1.5 shadow-field ${
+              fieldErrors.description ? 'ring-2 ring-danger' : ''
+            }`}
           />
           {fieldErrors.description && (
-            <p className="mt-2 text-sm text-red-600">{fieldErrors.description}</p>
+            <p className="mt-1.5 text-danger">{fieldErrors.description}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor={difficultyId} className="mb-2 block text-sm">
+          <label htmlFor={difficultyId} className="mb-1 block">
             Difficulty
           </label>
-          <select
+          <Select
             id={difficultyId}
             value={difficulty ?? ''}
             onChange={(event) => setDifficulty(Number(event.target.value) as Difficulty)}
             aria-invalid={fieldErrors.difficulty ? true : undefined}
-            className={`${field(fieldErrors.difficulty)} h-12 bg-white`}
+            className="w-full sm:w-64"
           >
             <option value="" disabled>
               Choose…
@@ -202,10 +202,8 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
                 {label}
               </option>
             ))}
-          </select>
-          {fieldErrors.difficulty && (
-            <p className="mt-2 text-sm text-red-600">{fieldErrors.difficulty}</p>
-          )}
+          </Select>
+          {fieldErrors.difficulty && <p className="mt-1.5 text-danger">{fieldErrors.difficulty}</p>}
         </div>
 
         <CategoryPicker
@@ -218,9 +216,11 @@ export function CreateQuizForm({ onCreated }: { onCreated: (quiz: QuizSummary) =
 
       <DraftQuestions drafts={questions} onChange={setQuestions} disabled={submitting} />
 
-      <Button type="submit" form={QUIZ_FORM_ID} className="self-start" disabled={submitting}>
-        {submitLabel}
-      </Button>
+      <div className="flex justify-end border-t border-dim pt-4 shadow-groove">
+        <Button type="submit" form={QUIZ_FORM_ID} disabled={submitting}>
+          {submitLabel}
+        </Button>
+      </div>
     </div>
   );
 }

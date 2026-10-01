@@ -5,7 +5,7 @@ import { updateQuiz } from '../api/quiz';
 import { getCategories } from '../api/quizzes';
 import type { Category, QuizSummary } from '../api/types';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { GroupBox } from '../components/GroupBox';
 import { CategoryPicker } from './CategoryPicker';
 
 type Props = {
@@ -60,14 +60,14 @@ export function CategoryEditor({ quiz, onSaved, onCancel }: Props) {
   }
 
   return (
-    <Card className="flex flex-col gap-4">
+    <GroupBox label="Edit categories" className="flex flex-col gap-4">
       <CategoryPicker
         categories={categories}
         selectedIds={categoryIds}
         onChange={setCategoryIds}
         error={error}
       />
-      <div className="flex gap-3">
+      <div className="flex gap-1.5">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </Button>
@@ -75,6 +75,6 @@ export function CategoryEditor({ quiz, onSaved, onCancel }: Props) {
           Cancel
         </Button>
       </div>
-    </Card>
+    </GroupBox>
   );
 }

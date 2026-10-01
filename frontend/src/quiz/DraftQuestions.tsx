@@ -2,6 +2,10 @@ import { useState } from 'react';
 
 import type { CreateQuestionRequest } from '../api/types';
 import { Button } from '../components/Button';
+import { GroupBox } from '../components/GroupBox';
+import { SectionHeading } from '../components/SectionHeading';
+import { play } from '../sound/player';
+import { AnswerList } from './AnswerList';
 import { QuestionForm } from './QuestionForm';
 
 type Props = {
@@ -16,44 +20,40 @@ export function DraftQuestions({ drafts, onChange, disabled }: Props) {
   async function handleAdd(question: CreateQuestionRequest) {
     onChange([...drafts, question]);
     setAdding(false);
+    play('save');
   }
 
   function handleRemove(index: number) {
     onChange(drafts.filter((_, i) => i !== index));
+    play('recycle');
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-semibold tracking-tight">
-        Questions <span className="text-base font-normal text-muted">(optional)</span>
-      </h2>
+    <section className="flex flex-col gap-6">
+      <SectionHeading>
+        <span>
+          Questions <span className="text-base font-normal text-muted">(optional)</span>
+        </span>
+      </SectionHeading>
 
       {drafts.length > 0 && (
-        <ol className="flex flex-col gap-4">
+        <ol className="flex flex-col gap-6">
           {drafts.map((draft, index) => (
-            <li key={index} className="rounded-control border border-hairline px-4 py-4">
-              <div className="flex items-start justify-between gap-4">
-                <p className="font-semibold">
-                  {index + 1}. {draft.text}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(index)}
-                  disabled={disabled}
-                  aria-label={`Remove question ${index + 1}`}
-                  className="min-h-12 text-sm text-accent transition-transform active:scale-95"
-                >
-                  Remove
-                </button>
-              </div>
-              <ul className="mt-2 flex flex-col gap-1 text-sm text-muted">
-                {draft.answerOptions.map((option, optionIndex) => (
-                  <li key={optionIndex}>
-                    {option.text}
-                    {option.isCorrect && <span className="ml-2 text-green-600">Correct</span>}
-                  </li>
-                ))}
-              </ul>
+            <li key={index}>
+              <GroupBox label={`Question ${index + 1}`} className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="font-bold">{draft.text}</p>
+                  <Button
+                    variant="utility"
+                    onClick={() => handleRemove(index)}
+                    disabled={disabled}
+                    aria-label={`Remove question ${index + 1}`}
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <AnswerList options={draft.answerOptions} revealed />
+              </GroupBox>
             </li>
           ))}
         </ol>

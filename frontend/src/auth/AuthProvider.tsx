@@ -5,6 +5,7 @@ import { login, register } from '../api/auth';
 import { setSessionExpiredHandler } from '../api/client';
 import { clearSession, getSession, setSession } from '../api/session';
 import type { User } from '../api/types';
+import { play } from '../sound/player';
 import { AuthContext } from './AuthContext';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     clearSession();
     setUser(null);
+    play('shutdown');
   }, []);
 
   // A 401 on an authenticated request means the token is stale — drop the session
@@ -27,12 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await login({ email, password });
     setSession(response);
     setUser(response.user);
+    play('success');
   }, []);
 
   const signUp = useCallback(async (email: string, userName: string, password: string) => {
     const response = await register({ email, userName, password });
     setSession(response);
     setUser(response.user);
+    play('success');
   }, []);
 
   useEffect(() => {

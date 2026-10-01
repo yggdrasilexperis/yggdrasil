@@ -33,8 +33,8 @@ function validate(title: string, description: string): FieldErrors {
 
 /**
  * Takes the place of the quiz's title and description on the detail page while editing.
- * The fields have no box of their own: they keep the heading's and paragraph's type and
- * position, so the text stays where it was and only the focus ring shows where you type.
+ * The fields keep the heading's and paragraph's type and position, so the text stays where
+ * it was; like renaming a file in Explorer, only a thin white box appears around it.
  */
 export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
   const titleErrorId = useId();
@@ -97,8 +97,9 @@ export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
 
   // field-sizing makes each box exactly as tall as its text. Chrome still reports 1px to
   // scroll and flashes a scrollbar, so hide overflow, but only where the box can grow.
+  // The rename box is a spread shadow, so it frames the text without moving it.
   const field =
-    'block w-full resize-none rounded-control bg-transparent field-sizing-content placeholder:text-muted supports-field-sizing:overflow-hidden';
+    'block w-full resize-none bg-white shadow-rename field-sizing-content placeholder:text-dim focus-visible:outline-offset-5 supports-field-sizing:overflow-hidden';
 
   return (
     <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} noValidate>
@@ -112,10 +113,10 @@ export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
         onKeyDown={handleTitleKeyDown}
         aria-invalid={fieldErrors.title ? true : undefined}
         aria-describedby={fieldErrors.title ? titleErrorId : undefined}
-        className={`${field} font-display text-4xl font-semibold tracking-tight`}
+        className={`${field} text-xl font-bold`}
       />
       {fieldErrors.title && (
-        <p id={titleErrorId} className="mt-2 text-sm text-red-600">
+        <p id={titleErrorId} className="mt-2 text-danger">
           {fieldErrors.title}
         </p>
       )}
@@ -131,14 +132,14 @@ export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
         className={`${field} mt-2`}
       />
       {fieldErrors.description && (
-        <p id={descriptionErrorId} className="mt-2 text-sm text-red-600">
+        <p id={descriptionErrorId} className="mt-2 text-danger">
           {fieldErrors.description}
         </p>
       )}
 
       {children}
 
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 flex gap-1.5">
         <Button type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </Button>
@@ -148,7 +149,7 @@ export function EditQuizForm({ quiz, onSaved, onCancel, children }: Props) {
       </div>
 
       {formError && (
-        <p role="alert" className="mt-3 text-sm text-red-600">
+        <p role="alert" className="mt-3 text-danger">
           {formError}
         </p>
       )}

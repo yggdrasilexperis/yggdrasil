@@ -1,25 +1,28 @@
 import type { ReactNode } from 'react';
 
+import { PixelIcon } from '../components/PixelIcon';
+import { Window } from '../components/Window';
+
 type Props = {
   title: string;
   subtitle: string;
   children: ReactNode;
-  /** The alternate-action line under the card (e.g. a link to the other form). */
+  /** The alternate-action line under the form (e.g. a link to the other form). */
   footer: ReactNode;
 };
 
-/** Shared chrome for the sign-in and sign-up forms: a centred card on parchment. */
+/** Shared chrome for the sign-in and sign-up forms: a log-on dialog centred on the desktop. */
 export function AuthShell({ title, subtitle, children, footer }: Props) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-parchment px-6 py-12">
-      <div className="w-full max-w-sm">
-        <div className="rounded-card border border-hairline bg-white p-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 text-sm text-muted">{subtitle}</p>
-          <div className="mt-6">{children}</div>
+    <div className="flex flex-1 flex-col items-center justify-center py-6">
+      <Window title={title} className="w-full max-w-md">
+        <div className="flex items-center gap-4">
+          <PixelIcon name="key" scale={2} />
+          <p>{subtitle}</p>
         </div>
-        <p className="mt-6 text-center text-sm text-muted">{footer}</p>
-      </div>
+        <div className="mt-5">{children}</div>
+        <p className="mt-6 border-t border-dim pt-3 text-muted shadow-groove">{footer}</p>
+      </Window>
     </div>
   );
 }

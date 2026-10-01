@@ -68,16 +68,16 @@ export function AddCommentForm({ quizId, onAdded }: Props) {
           onFocus={() => setExpanded(true)}
           placeholder="Add a comment..."
           maxLength={2000}
-          className="w-full border-b border-hairline bg-transparent py-2 text-sm focus:outline-none"
+          className="h-9 w-full bg-white px-2 shadow-field placeholder:text-dim"
         />
       </>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
       {formError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-danger">
           {formError}
         </p>
       )}
@@ -92,10 +92,10 @@ export function AddCommentForm({ quizId, onAdded }: Props) {
         onChange={(event) => setBody(event.target.value)}
         placeholder="Add a comment..."
         maxLength={2000}
-        className="min-h-24 w-full rounded-control border border-hairline px-4 py-3"
+        className="min-h-24 w-full bg-white px-2 py-1.5 shadow-field placeholder:text-dim"
       />
-      {fieldError && <p className="text-sm text-red-600">{fieldError}</p>}
-      <div className="flex gap-3">
+      {fieldError && <p className="text-danger">{fieldError}</p>}
+      <div className="flex gap-1.5">
         <Button type="submit" disabled={saving}>
           {saving ? 'Posting…' : 'Post comment'}
         </Button>

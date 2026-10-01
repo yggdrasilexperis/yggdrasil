@@ -61,7 +61,7 @@ export function SignInPage() {
       footer={
         <>
           New here?{' '}
-          <Link to="/register" className="text-accent">
+          <Link to="/register" className="text-accent underline underline-offset-2">
             Create an account
           </Link>
         </>
@@ -69,7 +69,7 @@ export function SignInPage() {
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-danger">
             {formError}
           </p>
         )}
@@ -89,7 +89,7 @@ export function SignInPage() {
           onChange={(event) => setPassword(event.target.value)}
           error={fieldErrors.password}
         />
-        <Button type="submit" className="mt-2 w-full" disabled={submitting}>
+        <Button type="submit" className="mt-2 self-end" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>

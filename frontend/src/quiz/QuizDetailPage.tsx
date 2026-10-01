@@ -10,15 +10,19 @@ import {
   updateQuestion,
   deleteComment,
 } from '../api/quiz';
-import { DIFFICULTY_LABELS } from '../api/types';
 import type { QuizDetail } from '../api/types';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
 import { CommentSection } from '../components/CommentSection';
 import { ErrorState } from '../components/ErrorState';
+import { GroupBox } from '../components/GroupBox';
 import { Loading } from '../components/Loading';
+import { SectionHeading } from '../components/SectionHeading';
+import { Window } from '../components/Window';
+import { confirmWithSound, play } from '../sound/player';
+import { AnswerList } from './AnswerList';
 import { CategoryEditor } from './CategoryEditor';
+import { DifficultyBadge } from './DifficultyBadge';
 import { EditQuizForm } from './EditQuizForm';
 import { QuestionForm } from './QuestionForm';
 
@@ -65,10 +69,11 @@ export function QuizDetailPage() {
   }
 
   async function handleDelete() {
-    if (!id || !window.confirm('Delete this quiz? This cannot be undone.')) return;
+    if (!id || !confirmWithSound('Delete this quiz? This cannot be undone.')) return;
     setDeleting(true);
     try {
       await deleteQuiz(id);
+      play('recycle');
       navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.detail || err.title : 'Could not delete this quiz.');
@@ -77,11 +82,12 @@ export function QuizDetailPage() {
   }
 
   async function handleRemoveQuestion(questionId: string) {
-    if (!id || !window.confirm('Remove this question?')) return;
+    if (!id || !confirmWithSound('Remove this question?')) return;
     setQuestionError('');
     setRemovingQuestionId(questionId);
     try {
       await deleteQuestion(id, questionId);
+      play('recycle');
       setDetail(
         (prev) => prev && { ...prev, questions: prev.questions.filter((q) => q.id !== questionId) },
       );
@@ -95,6 +101,7 @@ export function QuizDetailPage() {
   }
 
   function toggleAnswer(questionId: string) {
+    if (!revealedIds.has(questionId)) play('reveal');
     setRevealedIds((prev) => {
       const next = new Set(prev);
       if (next.has(questionId)) next.delete(questionId);
@@ -104,11 +111,12 @@ export function QuizDetailPage() {
   }
 
   async function handleRemoveComment(commentId: string) {
-    if (!id || !window.confirm('Remove this comment?')) return;
+    if (!id || !confirmWithSound('Remove this comment?')) return;
     setCommentError('');
     setRemovingCommentId(commentId);
     try {
       await deleteComment(id, commentId);
+      play('recycle');
       setDetail(
         (prev) => prev && { ...prev, comments: prev.comments.filter((q) => q.id !== commentId) },
       );
@@ -123,16 +131,20 @@ export function QuizDetailPage() {
 
   if (error && !detail) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-6 py-12">
-        <ErrorState message={error} onRetry={retry} />
+      <div className="mx-auto w-full max-w-3xl">
+        <Window title="Quiz" titleAs="div" icon="doc">
+          <ErrorState message={error} onRetry={retry} />
+        </Window>
       </div>
     );
   }
 
   if (!detail) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-6 py-12">
-        <Loading label="Loading quiz…" />
+      <div className="mx-auto w-full max-w-3xl">
+        <Window title="Quiz" titleAs="div" icon="doc">
+          <Loading label="Loading quiz…" />
+        </Window>
       </div>
     );
   }
@@ -141,11 +153,15 @@ export function QuizDetailPage() {
   const canManage = user?.id === quiz.ownerId || isAdmin;
 
   const meta = (
-    <div className="mt-3 flex items-center gap-2 text-sm text-muted">
-      <span>{DIFFICULTY_LABELS[quiz.difficulty]}</span>
+    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted">
+      <DifficultyBadge difficulty={quiz.difficulty} />
       {quiz.categories.length > 0 && <span>·</span>}
       {quiz.categories.map((category) => (
-        <Link key={category.categoryId} to={`/?category=${category.slug}`} className="text-accent">
+        <Link
+          key={category.categoryId}
+          to={`/?category=${category.slug}`}
+          className="text-accent underline underline-offset-2"
+        >
           {category.name}
         </Link>
       ))}
@@ -153,199 +169,212 @@ export function QuizDetailPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
-      <div>
-        {canManage && editingQuiz ? (
-          <EditQuizForm
-            quiz={quiz}
-            onSaved={(updatedQuiz) => {
-              setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
-              setEditingQuiz(false);
-            }}
-            onCancel={() => setEditingQuiz(false)}
-          >
-            {meta}
-          </EditQuizForm>
-        ) : (
-          <>
-            <h1 className="font-display text-4xl font-semibold tracking-tight">{quiz.title}</h1>
-            {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
-            {meta}
+    <div className="mx-auto w-full max-w-3xl">
+      <Window
+        title={quiz.title}
+        titleAs="div"
+        icon="doc"
+        // The toolbar stays put while the title is edited in place, so nothing below it moves;
+        // its buttons are simply unavailable until the edit is saved or cancelled.
+        toolbar={
+          canManage && (
+            <>
+              <Button variant="utility" onClick={() => setEditingQuiz(true)} disabled={editingQuiz}>
+                Edit
+              </Button>
 
-            {canManage && (
-              <div className="mt-4 flex gap-3">
-                <Button variant="secondary" onClick={() => setEditingQuiz(true)}>
-                  Edit
-                </Button>
+              <Button
+                variant="utility"
+                onClick={() => setEditingCategories(true)}
+                disabled={editingQuiz || editingCategories}
+              >
+                Edit categories
+              </Button>
 
-                <Button
-                  variant="secondary"
-                  onClick={() => setEditingCategories(true)}
-                  disabled={editingCategories}
-                >
-                  Edit categories
-                </Button>
+              <span
+                aria-hidden="true"
+                className="mx-1 h-6 border-r border-l border-r-highlight border-l-dim"
+              />
 
-                <Button variant="utility" onClick={handleDelete} disabled={deleting}>
-                  {deleting ? 'Deleting…' : 'Delete'}
-                </Button>
+              <Button variant="utility" onClick={handleDelete} disabled={editingQuiz || deleting}>
+                {deleting ? 'Deleting…' : 'Delete'}
+              </Button>
+            </>
+          )
+        }
+      >
+        <div className="flex flex-col gap-10">
+          <div>
+            {canManage && editingQuiz ? (
+              <EditQuizForm
+                quiz={quiz}
+                onSaved={(updatedQuiz) => {
+                  play('save');
+                  setDetail((prev) => prev && { ...prev, quiz: updatedQuiz });
+                  setEditingQuiz(false);
+                }}
+                onCancel={() => setEditingQuiz(false)}
+              >
+                {meta}
+              </EditQuizForm>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold break-words">{quiz.title}</h1>
+                {quiz.description && <p className="mt-2 text-muted">{quiz.description}</p>}
+                {meta}
+              </>
+            )}
+
+            {/* This can later be placed in the Edit page/ component */}
+            {canManage && editingCategories && (
+              <div className="mt-8">
+                <CategoryEditor
+                  quiz={quiz}
+                  onSaved={(updated) => {
+                    play('save');
+                    setDetail((prev) => prev && { ...prev, quiz: updated });
+                    setEditingCategories(false);
+                  }}
+                  onCancel={() => setEditingCategories(false)}
+                />
               </div>
             )}
-          </>
-        )}
 
-        {/* This can later be placed in the Edit page/ component */}
-        {canManage && editingCategories && (
-          <div className="mt-4">
-            <CategoryEditor
-              quiz={quiz}
-              onSaved={(updated) => {
-                setDetail((prev) => prev && { ...prev, quiz: updated });
-                setEditingCategories(false);
-              }}
-              onCancel={() => setEditingCategories(false)}
-            />
+            {error && (
+              <p role="alert" className="mt-3 text-danger">
+                {error}
+              </p>
+            )}
           </div>
-        )}
 
-        {error && (
-          <p role="alert" className="mt-3 text-sm text-red-600">
-            {error}
-          </p>
-        )}
-      </div>
+          <div className="flex flex-col gap-6">
+            <SectionHeading>Questions</SectionHeading>
+            {questionError && (
+              <p role="alert" className="text-danger">
+                {questionError}
+              </p>
+            )}
+            {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
+            {questions.map((question, index) =>
+              canManage && editingQuestionId === question.id ? (
+                <QuestionForm
+                  key={question.id}
+                  question={question}
+                  onSave={async (request) => {
+                    const saved = await updateQuestion(quiz.id, question.id, request);
+                    play('save');
+                    setDetail(
+                      (prev) =>
+                        prev && {
+                          ...prev,
+                          questions: prev.questions.map((q) => (q.id === saved.id ? saved : q)),
+                        },
+                    );
+                    setEditingQuestionId(null);
+                  }}
+                  onCancel={() => setEditingQuestionId(null)}
+                />
+              ) : (
+                <GroupBox
+                  key={question.id}
+                  label={`Question ${index + 1}`}
+                  className="flex flex-col gap-3"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <p className="font-bold">{question.text}</p>
+                    {canManage && (
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          variant="utility"
+                          onClick={() => setEditingQuestionId(question.id)}
+                          disabled={editingQuestionId !== null}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="utility"
+                          onClick={() => handleRemoveQuestion(question.id)}
+                          disabled={removingQuestionId !== null}
+                        >
+                          {removingQuestionId === question.id ? 'Removing...' : 'Remove'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <AnswerList
+                    options={question.answerOptions}
+                    revealed={revealedIds.has(question.id)}
+                  />
+                  <Button
+                    variant="secondary"
+                    className="self-start"
+                    onClick={() => toggleAnswer(question.id)}
+                  >
+                    {revealedIds.has(question.id) ? 'Hide answer' : 'Show answer'}
+                  </Button>
+                </GroupBox>
+              ),
+            )}
 
-      <div className="flex flex-col gap-4">
-        <h2 className="font-display text-2xl font-semibold tracking-tight">Questions</h2>
-        {questionError && (
-          <p role="alert" className="text-sm text-red-600">
-            {questionError}
-          </p>
-        )}
-        {questions.length === 0 && <p className="text-muted">No questions yet.</p>}
-        {questions.map((question) =>
-          canManage && editingQuestionId === question.id ? (
-            <QuestionForm
-              key={question.id}
-              question={question}
-              onSave={async (request) => {
-                const saved = await updateQuestion(quiz.id, question.id, request);
+            {canManage &&
+              (addingQuestion ? (
+                <QuestionForm
+                  onSave={async (question) => {
+                    const saved = await addQuestion(quiz.id, question);
+                    play('save');
+                    setDetail((prev) => prev && { ...prev, questions: [...prev.questions, saved] });
+                    setAddingQuestion(false);
+                  }}
+                  onCancel={() => setAddingQuestion(false)}
+                />
+              ) : (
+                <Button
+                  variant="secondary"
+                  className="self-start"
+                  onClick={() => setAddingQuestion(true)}
+                >
+                  Add question
+                </Button>
+              ))}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <CommentSection
+              comments={detail.comments}
+              quizId={quiz.id}
+              quizOwnerId={quiz.ownerId}
+              currentUserId={user?.id}
+              isAdmin={isAdmin}
+              canComment={!!user}
+              removingCommentId={removingCommentId}
+              editingCommentId={editingCommentId}
+              onAdded={(comment) => {
+                play('save');
+                setDetail((prev) => prev && { ...prev, comments: [...prev.comments, comment] });
+              }}
+              onRemove={handleRemoveComment}
+              onEdit={(commentId) => setEditingCommentId(commentId)}
+              onCancelEdit={() => setEditingCommentId(null)}
+              onSaved={(comment) => {
+                play('save');
                 setDetail(
                   (prev) =>
                     prev && {
                       ...prev,
-                      questions: prev.questions.map((q) => (q.id === saved.id ? saved : q)),
+                      comments: prev.comments.map((c) => (c.id === comment.id ? comment : c)),
                     },
                 );
-                setEditingQuestionId(null);
+                setEditingCommentId(null);
               }}
-              onCancel={() => setEditingQuestionId(null)}
             />
-          ) : (
-            <Card key={question.id} className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-4">
-                <p className="font-display text-xl font-semibold">{question.text}</p>
-                {canManage && (
-                  <div className="flex shrink-0 gap-3">
-                    <Button
-                      variant="utility"
-                      onClick={() => setEditingQuestionId(question.id)}
-                      disabled={editingQuestionId !== null}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="utility"
-                      onClick={() => handleRemoveQuestion(question.id)}
-                      disabled={removingQuestionId !== null}
-                    >
-                      {removingQuestionId === question.id ? 'Removing...' : 'Remove'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-              <ul className="flex flex-col gap-2">
-                {question.answerOptions.map((option) => (
-                  <li
-                    key={option.id}
-                    className={`flex justify-between gap-4 rounded-control border px-4 py-3 ${
-                      revealedIds.has(question.id) && option.isCorrect
-                        ? 'border-green-600 outline-1 outline-green-600'
-                        : 'border-hairline outline-0'
-                    }`}
-                  >
-                    {option.text}
-                    {revealedIds.has(question.id) && option.isCorrect && (
-                      <span className="text-sm font-bold text-green-600 mt-0.5">Correct</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant="secondary"
-                className="self-start"
-                onClick={() => toggleAnswer(question.id)}
-              >
-                {revealedIds.has(question.id) ? 'Hide answer' : 'Show answer'}
-              </Button>
-            </Card>
-          ),
-        )}
-
-        {canManage &&
-          (addingQuestion ? (
-            <QuestionForm
-              onSave={async (question) => {
-                const saved = await addQuestion(quiz.id, question);
-                setDetail((prev) => prev && { ...prev, questions: [...prev.questions, saved] });
-                setAddingQuestion(false);
-              }}
-              onCancel={() => setAddingQuestion(false)}
-            />
-          ) : (
-            <Button
-              variant="secondary"
-              className="self-start"
-              onClick={() => setAddingQuestion(true)}
-            >
-              Add question
-            </Button>
-          ))}
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <CommentSection
-          comments={detail.comments}
-          quizId={quiz.id}
-          quizOwnerId={quiz.ownerId}
-          currentUserId={user?.id}
-          isAdmin={isAdmin}
-          canComment={!!user}
-          removingCommentId={removingCommentId}
-          editingCommentId={editingCommentId}
-          onAdded={(comment) =>
-            setDetail((prev) => prev && { ...prev, comments: [...prev.comments, comment] })
-          }
-          onRemove={handleRemoveComment}
-          onEdit={(commentId) => setEditingCommentId(commentId)}
-          onCancelEdit={() => setEditingCommentId(null)}
-          onSaved={(comment) => {
-            setDetail(
-              (prev) =>
-                prev && {
-                  ...prev,
-                  comments: prev.comments.map((c) => (c.id === comment.id ? comment : c)),
-                },
-            );
-            setEditingCommentId(null);
-          }}
-        />
-        {commentError && (
-          <p role="alert" className="text-sm text-red-600">
-            {commentError}
-          </p>
-        )}
-      </div>
+            {commentError && (
+              <p role="alert" className="text-danger">
+                {commentError}
+              </p>
+            )}
+          </div>
+        </div>
+      </Window>
     </div>
   );
 }

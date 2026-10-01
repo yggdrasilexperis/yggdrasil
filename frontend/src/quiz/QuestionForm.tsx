@@ -4,7 +4,7 @@ import type { SubmitEvent } from 'react';
 import { ApiError } from '../api/ApiError';
 import type { CreateAnswerOptionsRequest, CreateQuestionRequest, Question } from '../api/types';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { GroupBox } from '../components/GroupBox';
 import { Input } from '../components/Input';
 
 type Props = {
@@ -106,10 +106,10 @@ export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save q
   }
 
   return (
-    <Card>
+    <GroupBox label={question ? 'Edit question' : 'New question'}>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-danger">
             {formError}
           </p>
         )}
@@ -122,9 +122,7 @@ export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save q
           error={fieldErrors.text}
         />
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-2 text-sm">Answer options</legend>
-
+        <GroupBox as="fieldset" label="Answer options" className="flex flex-col gap-4">
           {options.map((option, index) => (
             <div key={index} className="flex flex-col gap-2">
               <Input
@@ -135,32 +133,28 @@ export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save q
                 error={fieldErrors.optionTexts?.[index]}
               />
               <div className="flex items-center gap-4">
-                <label className="flex min-h-11 items-center gap-2 text-sm">
+                <label className="flex min-h-8 items-center gap-2">
                   <input
                     type="checkbox"
                     checked={option.isCorrect}
                     onChange={(event) => updateOption(index, { isCorrect: event.target.checked })}
-                    className="h-4 w-4 accent-accent"
                   />
                   Correct
                 </label>
                 {options.length > 2 && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="utility"
                     onClick={() => removeOption(index)}
                     aria-label={`Remove option ${index + 1}`}
-                    className="min-h-11 text-sm text-accent transition-transform active:scale-95"
                   >
                     Remove
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
           ))}
 
-          {fieldErrors.answerOptions && (
-            <p className="text-sm text-red-600">{fieldErrors.answerOptions}</p>
-          )}
+          {fieldErrors.answerOptions && <p className="text-danger">{fieldErrors.answerOptions}</p>}
 
           <Button
             variant="secondary"
@@ -169,9 +163,9 @@ export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save q
           >
             Add option
           </Button>
-        </fieldset>
+        </GroupBox>
 
-        <div className="flex gap-3">
+        <div className="flex gap-1.5">
           <Button type="submit" disabled={saving}>
             {saving ? 'Saving…' : submitLabel}
           </Button>
@@ -180,6 +174,6 @@ export function QuestionForm({ question, onSave, onCancel, submitLabel = 'Save q
           </Button>
         </div>
       </form>
-    </Card>
+    </GroupBox>
   );
 }

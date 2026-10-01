@@ -51,7 +51,7 @@ export function EditCommentForm({ quizId, commentId, initialBody, onSaved, onCan
   return (
     <form onSubmit={handleSubmit} noValidate className="mt-2 flex flex-col gap-2">
       {formError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-danger">
           {formError}
         </p>
       )}
@@ -63,10 +63,10 @@ export function EditCommentForm({ quizId, commentId, initialBody, onSaved, onCan
         value={body}
         onChange={(event) => setBody(event.target.value)}
         maxLength={2000}
-        className="min-h-24 w-full rounded-control border border-hairline px-4 py-3"
+        className="min-h-24 w-full bg-white px-2 py-1.5 shadow-field placeholder:text-dim"
       />
-      {fieldError && <p className="text-sm text-red-600">{fieldError}</p>}
-      <div className="flex gap-3">
+      {fieldError && <p className="text-danger">{fieldError}</p>}
+      <div className="flex gap-1.5">
         <Button type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </Button>

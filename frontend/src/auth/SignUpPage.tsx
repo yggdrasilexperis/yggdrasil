@@ -84,7 +84,7 @@ export function SignUpPage() {
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="text-accent">
+          <Link to="/login" className="text-accent underline underline-offset-2">
             Sign in
           </Link>
         </>
@@ -92,7 +92,7 @@ export function SignUpPage() {
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         {formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-danger">
             {formError}
           </p>
         )}
@@ -119,7 +119,7 @@ export function SignUpPage() {
           onChange={(event) => setPassword(event.target.value)}
           error={fieldErrors.password}
         />
-        <Button type="submit" className="mt-2 w-full" disabled={submitting}>
+        <Button type="submit" className="mt-2 self-end" disabled={submitting}>
           {submitting ? 'Creating account…' : 'Create account'}
         </Button>
       </form>
