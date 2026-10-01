@@ -1,50 +1,16 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
-import { useAuth } from '../auth/useAuth';
-import { Button } from '../components/Button';
+import { useSystemSounds } from '../sound/useSystemSounds';
+import { Taskbar } from './Taskbar';
 
-/** Header + nav shared by every route; the routed page renders into the Outlet. */
+/** The desktop shared by every route: pages open as windows above the taskbar. */
 export function AppLayout() {
-  const { user, signOut } = useAuth();
-  const location = useLocation();
-  const onAuthPage = ['/login', '/register'].includes(location.pathname);
+  useSystemSounds();
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="border-b border-hairline">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <Link to="/" className="font-display text-xl font-semibold tracking-tight">
-            Yggdrasil
-          </Link>
-          <nav className="flex items-center gap-4">
-            {user ? (
-              <>
-                <Link to="/quizzes/new" className="text-sm">
-                  Create quiz
-                </Link>
-                <span className="text-sm text-muted">{user.userName}</span>
-                <Button variant="utility" onClick={signOut}>
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  state={onAuthPage ? location.state : { from: location.pathname }}
-                  className="text-sm text-ink"
-                >
-                  Sign in
-                </Link>
-                <Link to="/register" className="text-sm text-accent">
-                  Create account
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
-      <main className="flex flex-1 flex-col">
+      <Taskbar />
+      <main className="flex flex-1 flex-col px-3 pt-4 pb-18 sm:px-6 sm:pt-10 sm:pb-20">
         <Outlet />
       </main>
     </div>
