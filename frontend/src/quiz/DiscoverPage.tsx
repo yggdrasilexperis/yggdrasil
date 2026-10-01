@@ -129,7 +129,7 @@ export function DiscoverPage() {
       </div>
 
       {error && <ErrorState message={error} onRetry={retry} />}
-      {!error && result?.items === null && <Loading label="Loading quizzes…" />}
+      {!error && result === null && <Loading label="Loading quizzes…" />}
       {!error && result?.items?.length === 0 && (
         <p className="text-muted">
           {selected.length > 0
