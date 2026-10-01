@@ -63,14 +63,14 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     [Fact]
     public async Task SeedsEveryEntity_AndSeedingTwiceDoesNotDuplicate()
     {
-        (await Db.Users.CountAsync()).ShouldBe(3);
+        (await Db.Users.CountAsync()).ShouldBe(8);
         (await Db.Roles.CountAsync()).ShouldBe(2);
-        (await Db.UserRoles.CountAsync()).ShouldBe(3);
-        (await Db.Categories.CountAsync()).ShouldBe(6);
-        (await Db.Quizzes.CountAsync()).ShouldBe(24);
-        (await Db.Questions.CountAsync()).ShouldBe(16);
-        (await Db.AnswerOptions.CountAsync()).ShouldBe(64);
-        (await Db.Comments.CountAsync()).ShouldBe(3);
+        (await Db.UserRoles.CountAsync()).ShouldBe(8);
+        (await Db.Categories.CountAsync()).ShouldBe(13);
+        (await Db.Quizzes.CountAsync()).ShouldBe(46);
+        (await Db.Questions.CountAsync()).ShouldBe(338);
+        (await Db.AnswerOptions.CountAsync()).ShouldBe(1310);
+        (await Db.Comments.CountAsync()).ShouldBe(144);
     }
 
     [Fact]
@@ -83,17 +83,23 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
             .Select(c => c.Slug)
             .Distinct()
             .Order()
-            .ShouldBe(["games", "music", "pop-culture", "sports", "tv-shows"]);
+            .ShouldBe(
+                [
+                    "books", "food-and-drink", "games", "geography", "history", "movies", "music",
+                    "nature", "pop-culture", "science", "sports", "tv-shows", "uncategorized",
+                ]
+            );
     }
 
     [Fact]
-    public async Task TwoQuizzesCarryTwoCategoriesEach()
+    public async Task SomeQuizzesCarrySeveralCategories()
     {
         var quizzes = await Db.Quizzes.Include(q => q.Categories).ToListAsync();
 
-        quizzes.Count(q => q.Categories.Count == 2).ShouldBe(2);
-        // 6 pairs from the four hand-written quizzes, plus one each from the 20 filler quizzes
-        quizzes.SelectMany(q => q.Categories).Count().ShouldBe(26);
+        quizzes.Count(q => q.Categories.Count == 2).ShouldBe(10);
+        quizzes.Count(q => q.Categories.Count == 3).ShouldBe(1);
+        // 35 quizzes with one category, 10 with two, 1 with three
+        quizzes.SelectMany(q => q.Categories).Count().ShouldBe(58);
     }
 
     [Fact]
@@ -108,28 +114,33 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
     }
 
     [Fact]
-    public async Task EveryQuestionHasFourOptionsAndExactlyOneCorrectAnswer()
+    public async Task EveryQuestionHasAtLeastTwoOptionsAndExactlyOneCorrectAnswer()
     {
         var questions = await Db.Questions.Include(q => q.AnswerOptions).ToListAsync();
-        questions.Count.ShouldBe(16);
-        questions.ShouldAllBe(q => q.AnswerOptions.Count == 4);
+        questions.Count.ShouldBe(338);
+        // Mostly four options, plus some true/false and three-way questions.
+        questions.ShouldAllBe(q => q.AnswerOptions.Count >= 2 && q.AnswerOptions.Count <= 4);
+        questions.ShouldContain(q => q.AnswerOptions.Count == 2);
         questions.ShouldAllBe(q => q.AnswerOptions.Count(o => o.IsCorrect) == 1);
     }
 
     [Fact]
-    public async Task QuizzesAreSplitAcrossTwoOwners_SoOwnershipRulesAreDemonstrable()
+    public async Task QuizzesAreSpreadAcrossSeveralOwners_SoOwnershipRulesAreDemonstrable()
     {
         var alva = await Db.Users.SingleAsync(u => u.NormalizedEmail == "ALVA@EXAMPLE.COM");
         var jonas = await Db.Users.SingleAsync(u => u.NormalizedEmail == "JONAS@EXAMPLE.COM");
+        var admin = await Db.Users.SingleAsync(u => u.NormalizedEmail == "ADMIN@EXAMPLE.COM");
 
         var owners = await Db.Quizzes.Select(q => q.OwnerId).Distinct().ToListAsync();
-        owners.Count.ShouldBe(2);
+        owners.Count.ShouldBe(7);
         owners.ShouldContain(alva.Id);
         owners.ShouldContain(jonas.Id);
+        // The admin owns nothing, so anything they change is someone else's quiz.
+        owners.ShouldNotContain(admin.Id);
     }
 
     [Fact]
-    public async Task CommentsAreWrittenByUsersWhoDoNotOwnTheQuiz()
+    public async Task CommentsComeFromOtherUsers_WithSomeRepliesFromTheQuizAuthor()
     {
         var pairs = await Db
             .Comments.Join(
@@ -139,7 +150,23 @@ public class DatabaseSeederTests(SeededDatabase fixture) : IClassFixture<SeededD
                 (c, q) => new { c.AuthorId, q.OwnerId }
             )
             .ToListAsync();
-        pairs.ShouldAllBe(x => x.AuthorId != x.OwnerId);
+        pairs.Count(x => x.AuthorId != x.OwnerId).ShouldBeGreaterThan(pairs.Count(x => x.AuthorId == x.OwnerId));
+        pairs.ShouldContain(x => x.AuthorId == x.OwnerId);
+    }
+
+    [Fact]
+    public async Task CommentsArePostedAfterTheirQuiz()
+    {
+        var comments = await Db
+            .Comments.Join(
+                Db.Quizzes,
+                c => c.QuizId,
+                q => q.Id,
+                (c, q) => new { c.CreatedAt, c.UpdatedAt, QuizCreatedAt = q.CreatedAt }
+            )
+            .ToListAsync();
+        comments.ShouldAllBe(x => x.CreatedAt > x.QuizCreatedAt);
+        comments.ShouldAllBe(x => x.UpdatedAt >= x.CreatedAt);
     }
 
     [Fact]
