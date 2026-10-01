@@ -233,19 +233,21 @@ FluentValidation failure from `ValidationFilter<T>` becomes a 400 with an
 checks live in `QuizService`, never in an endpoint. The two roles are seeded by
 migration via `IdentityRoleConfiguration.HasData`.
 
-**Seeding** — `--seed` runs `DatabaseSeeder` over `SeedData` and exits; it is a
-no-op once the seed users exist. It adds `alva@example.com` and
-`jonas@example.com` (`User`) and `admin@example.com` (`Admin`), all with the
-password stored in `Seed:Password` (user secrets), plus 5 categories, 24 quizzes
-and a few comments. `--seed` throws if `Seed:Password` is missing. Categories
-only exist after `--seed`, and creating a quiz requires one.
+**Seeding** — `--seed` runs `DatabaseSeeder` over `SeedData` (users,
+categories) and `SeedQuizzes` (quizzes with their questions and comments) and
+exits; it is a no-op once the seed users exist. It adds `admin@example.com`
+(`Admin`) and seven `User`s — `alva`, `jonas`, `sigrid`, `tobben`, `nora`,
+`kasper`, `eirik`, each `<name>@example.com` — all with the password stored in
+`Seed:Password` (user secrets), plus 12 categories and Uncategorized, 46 quizzes
+and their comment threads. `--seed` throws if `Seed:Password` is missing.
+Categories only exist after `--seed`, and creating a quiz requires one.
 
 **Tests** — `Tests.Unit` covers services and validators. `Tests.Integration`
 shares one Postgres container per run (`Fixtures/ApiFactory` via
 `ApiCollection`); call `factory.ResetAsync()` in `InitializeAsync`. It truncates
 users and categories (cascading to quizzes), so a test seeds the categories it
 needs. `Seeding/DatabaseSeederTests` pins the seed counts — update it when
-`SeedData` changes.
+`SeedData` or `SeedQuizzes` changes.
 
 Known quirks — don't fix them unprompted, and don't copy them:
 

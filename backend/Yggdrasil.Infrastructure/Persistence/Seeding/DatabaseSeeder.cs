@@ -24,21 +24,16 @@ public class DatabaseSeeder(YggdrasilDbContext db, IOptions<SeedOptions> options
 
         if (await db.Users.AnyAsync(u => u.Id == SeedData.AlvaId, ct)) return;
 
-        var alva = CreateUser(SeedData.AlvaId, "alva", "alva@example.com", password);
-        var jonas = CreateUser(SeedData.JonasId, "jonas", "jonas@example.com", password);
-        var admin = CreateUser(SeedData.AdminId, "admin", "admin@example.com", password);
-        db.Users.AddRange(alva, jonas, admin);
-
-        db.UserRoles.AddRange(
-            new IdentityUserRole<Guid> { UserId = alva.Id, RoleId = SeedData.UserRoleId },
-            new IdentityUserRole<Guid> { UserId = jonas.Id, RoleId = SeedData.UserRoleId },
-            new IdentityUserRole<Guid> { UserId = admin.Id, RoleId = SeedData.AdminRoleId }
-        );
+        foreach (var (id, userName, roleId) in SeedData.Users)
+        {
+            db.Users.Add(CreateUser(id, userName, $"{userName}@example.com", password));
+            db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = id, RoleId = roleId });
+        }
 
         var categories = SeedData.Categories();
         db.Categories.AddRange(categories);
-        db.Quizzes.AddRange(SeedData.Quizzes(categories));
-        db.Comments.AddRange(SeedData.Comments());
+        // Questions, answer options and comments are added through each quiz's navigations.
+        db.Quizzes.AddRange(SeedQuizzes.All(categories));
 
         await db.SaveChangesAsync(ct);
     }
