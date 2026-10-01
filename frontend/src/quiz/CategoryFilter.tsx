@@ -1,5 +1,8 @@
 import type { Category } from '../api/types';
 import { UNCATEGORIZED_SLUG } from '../api/types';
+import { Button } from '../components/Button';
+import { Select } from '../components/Select';
+import { CategoryChip } from './CategoryChip';
 
 type Props = {
   categories: Category[];
@@ -24,14 +27,13 @@ export function CategoryFilter({ categories, selected, onChange }: Props) {
     .filter((category) => category !== undefined);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-4">
-        <select
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <Select
           aria-label="Filter by category"
           value=""
           onChange={(event) => onChange([...selected, event.target.value])}
           disabled={available.length === 0}
-          className="h-11 rounded-control border border-hairline bg-white px-4 disabled:text-muted"
         >
           <option value="" disabled>
             {available.length === 0 ? 'No more categories' : 'Filter by category…'}
@@ -41,36 +43,24 @@ export function CategoryFilter({ categories, selected, onChange }: Props) {
               {category.name}
             </option>
           ))}
-        </select>
+        </Select>
 
         {selected.length > 0 && (
-          <button
-            type="button"
-            onClick={() => onChange([])}
-            className="text-sm text-accent transition-transform active:scale-95"
-          >
+          <Button variant="utility" onClick={() => onChange([])} className="min-h-9">
             Clear all
-          </button>
+          </Button>
         )}
       </div>
 
       {active.length > 0 && (
-        <ul aria-label="Active filters" className="flex flex-wrap gap-2">
+        <ul aria-label="Active filters" className="flex flex-wrap gap-1">
           {active.map((category) => (
-            <li
+            <CategoryChip
               key={category.categoryId}
-              className="flex items-center rounded-control border border-accent pl-4 text-accent"
-            >
-              {category.name}
-              <button
-                type="button"
-                onClick={() => onChange(selected.filter((slug) => slug !== category.slug))}
-                aria-label={`Remove ${category.name} filter`}
-                className="flex h-11 w-11 items-center justify-center transition-transform active:scale-95"
-              >
-                ×
-              </button>
-            </li>
+              name={category.name}
+              removeLabel={`Remove ${category.name} filter`}
+              onRemove={() => onChange(selected.filter((slug) => slug !== category.slug))}
+            />
           ))}
         </ul>
       )}

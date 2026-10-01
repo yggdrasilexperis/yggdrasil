@@ -8,9 +8,11 @@ import { QUIZ_SORTS } from '../api/types';
 import type { Category, PagedResult, QuizSort, QuizSummary } from '../api/types';
 import { ErrorState } from '../components/ErrorState';
 import { Loading } from '../components/Loading';
+import { Select } from '../components/Select';
+import { Window } from '../components/Window';
 import { CategoryFilter } from './CategoryFilter';
 import { Pager } from './Pager';
-import { QuizCard } from './QuizCard';
+import { QuizList } from './QuizList';
 
 const PAGE_SIZE = 9;
 const DEFAULT_SORT: QuizSort = 'newest';
@@ -102,57 +104,64 @@ export function DiscoverPage() {
     setReloadKey((k) => k + 1);
   }
 
+  const hasItems = !error && result && result.items.length > 0;
+
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
-      <h1 className="font-display text-4xl font-semibold tracking-tight">Discover</h1>
-
-      <div className="flex flex-wrap items-start gap-4">
-        {categories.length > 0 && (
-          <CategoryFilter
-            categories={categories}
-            selected={selected}
-            onChange={handleFilterChange}
-          />
+    <div className="mx-auto w-full max-w-5xl">
+      <Window
+        title="Discover"
+        icon="folder"
+        flush
+        toolbar={
+          <>
+            {categories.length > 0 && (
+              <CategoryFilter
+                categories={categories}
+                selected={selected}
+                onChange={handleFilterChange}
+              />
+            )}
+            <Select
+              aria-label="Sort quizzes"
+              value={sort}
+              onChange={(event) => handleSortChange(event.target.value as QuizSort)}
+              className="ml-auto self-start"
+            >
+              {Object.entries(QUIZ_SORTS).map(([key, option]) => (
+                <option key={key} value={key}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </>
+        }
+        status={
+          hasItems && (
+            <Pager
+              page={result.page}
+              totalPages={result.totalPages}
+              totalCount={result.totalCount}
+              onChange={handlePageChange}
+            />
+          )
+        }
+      >
+        {error && <ErrorState message={error} onRetry={retry} className="p-3 sm:p-5" />}
+        {!error && result?.items === null && (
+          <Loading label="Loading quizzes…" className="p-3 sm:p-5" />
         )}
-        <select
-          aria-label="Sort quizzes"
-          value={sort}
-          onChange={(event) => handleSortChange(event.target.value as QuizSort)}
-          className="ml-auto h-11 rounded-control border border-hairline bg-white px-4"
-        >
-          {Object.entries(QUIZ_SORTS).map(([key, option]) => (
-            <option key={key} value={key}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        {!error && result?.items?.length === 0 && (
+          <p className="bg-white px-4 py-16 text-center text-muted shadow-field">
+            {selected.length > 0
+              ? 'No quizzes match every category you picked.'
+              : 'No quizzes yet. Be the first to create one.'}
+          </p>
+        )}
 
-      {error && <ErrorState message={error} onRetry={retry} />}
-      {!error && result?.items === null && <Loading label="Loading quizzes…" />}
-      {!error && result?.items?.length === 0 && (
-        <p className="text-muted">
-          {selected.length > 0
-            ? 'No quizzes match every category you picked.'
-            : 'No quizzes yet. Be the first to create one.'}
-        </p>
-      )}
-
-      {!error && result && result.items.length > 0 && (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {result.items.map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} />
-            ))}
-          </div>
-          <Pager
-            page={result.page}
-            totalPages={result.totalPages}
-            totalCount={result.totalCount}
-            onChange={handlePageChange}
-          />
-        </>
-      )}
+        {hasItems && (
+          <QuizList quizzes={result.items} sort={sort} onSortChange={handleSortChange} />
+        )}
+      </Window>
     </div>
   );
 }
