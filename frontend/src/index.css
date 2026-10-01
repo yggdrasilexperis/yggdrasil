@@ -4,37 +4,206 @@
    usage and emits dead CSS. */
 @source not "../**/*.md";
 
+/* W95FA: an open redraw of the Windows 95 system font (OFL, see assets/fonts/OFL.txt).
+   Glyphs it lacks (… · — ð) fall back to Tahoma, the face that succeeded it. */
+@font-face {
+  font-family: 'W95FA';
+  src: url('./assets/fonts/w95fa.woff2') format('woff2');
+  font-display: swap;
+}
+
 /* Design tokens. DESIGN.md explains the rules behind them. */
 @theme {
-  --font-sans: 'SF Pro Text', system-ui, -apple-system, sans-serif;
-  --font-display: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  /* One face for everything, chrome and content alike, as in 98. */
+  --font-sans: 'W95FA', Tahoma, Verdana, sans-serif;
 
-  /* One accent carries every interactive element. */
-  --color-accent: #0066cc;
-  --color-accent-focus: #0071e3;
+  /* W95FA is drawn on a grid of 1/12.5 em. These sizes put each font pixel on whole
+     screen pixels (1.5, 2 and 2.5 px), so type stays sharp. No other sizes exist. */
+  --text-*: initial;
+  --text-base: 1.171875rem;
+  --text-base--line-height: 1.44;
+  --text-lg: 1.5625rem;
+  --text-lg--line-height: 1.2;
+  --text-xl: 1.953125rem;
+  --text-xl--line-height: 1.2;
 
-  --color-ink: #1d1d1f;
-  --color-muted: #6e6e73;
-  --color-parchment: #f5f5f7;
-  --color-hairline: #e0e0e0;
+  /* The desktop everything sits on, and the warm grey every window is cut from. */
+  --color-desktop: #2d6b67;
+  --color-face: #d4d0c8;
 
-  /* One corner radius for every control; cards a step softer. */
-  --radius-control: 0.5rem;
-  --radius-card: 0.75rem;
+  /* The bevel ramp, lightest to darkest. Light always falls from the top left. */
+  --color-highlight: #ffffff;
+  --color-light: #e8e5de;
+  --color-dim: #8a867d;
+  --color-ink: #1c1b19;
+
+  --color-muted: #55514a;
+
+  /* Navy carries title bars, selection and links. The title bar fades to accent-end. */
+  --color-accent: #0c2a6b;
+  --color-accent-end: #4a7fb8;
+
+  --color-danger: #a3160f;
+  --color-success: #1d6b2a;
+  --color-tooltip: #ffffe1;
+
+  /* Bevels: four 1px lines each. Raised lights the top-left edge, sunken the bottom-right. */
+  --shadow-raised:
+    inset -1px -1px var(--color-ink), inset 1px 1px var(--color-highlight),
+    inset -2px -2px var(--color-dim), inset 2px 2px var(--color-light);
+  --shadow-pressed:
+    inset -1px -1px var(--color-highlight), inset 1px 1px var(--color-ink),
+    inset -2px -2px var(--color-light), inset 2px 2px var(--color-dim);
+  --shadow-field:
+    inset -1px -1px var(--color-highlight), inset 1px 1px var(--color-dim),
+    inset -2px -2px var(--color-light), inset 2px 2px var(--color-ink);
+  --shadow-window:
+    inset -1px -1px var(--color-ink), inset 1px 1px var(--color-light),
+    inset -2px -2px var(--color-dim), inset 2px 2px var(--color-highlight),
+    4px 4px 0 rgb(0 0 0 / 0.28);
+  /* Shallow versions: one line each. */
+  --shadow-panel: inset -1px -1px var(--color-dim), inset 1px 1px var(--color-highlight);
+  --shadow-status: inset -1px -1px var(--color-highlight), inset 1px 1px var(--color-dim);
+  /* Pair with `border border-dim` for a carved groove; `border-t border-dim` for a rule. */
+  --shadow-etched: inset 1px 1px var(--color-highlight), 1px 1px var(--color-highlight);
+  --shadow-groove: inset 0 1px var(--color-highlight);
+  /* Explorer's rename box: a white margin and a black line, drawn outside the text. */
+  --shadow-rename: 0 0 0 2px var(--color-highlight), 0 0 0 3px var(--color-ink);
+
+  /* Disabled text is pressed into the face, not faded. */
+  --text-shadow-emboss: 1px 1px 0 var(--color-highlight);
+
+  /* steps() keeps motion as chunky as the pixels. */
+  --animate-window-open: window-open 180ms steps(4) both;
+  --animate-progress: progress 2.4s steps(24) infinite;
+
+  @keyframes window-open {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+
+  @keyframes progress {
+    from {
+      left: -30%;
+    }
+    to {
+      left: 100%;
+    }
+  }
+}
+
+/* The 50% dither Windows used where it had no colour to spare: taskbar tasks, scrollbar tracks. */
+@utility bg-dither {
+  background-image: repeating-conic-gradient(var(--color-highlight) 0 25%, transparent 0 50%);
+  background-size: 2px 2px;
 }
 
 @layer base {
-  /* Reserve the scrollbar gutter, so a short list does not shift the page sideways. */
+  /* Always show the vertical scrollbar, as Internet Explorer did, so filtering a list down
+     to a few rows never changes the page's width. scrollbar-gutter can't do this: Chrome
+     reserves no gutter for a custom-styled scrollbar. */
   html {
-    scrollbar-gutter: stable;
+    overflow-y: scroll;
   }
 
   body {
-    @apply bg-white font-sans text-[17px] leading-[1.47] text-ink antialiased;
+    @apply bg-desktop font-sans text-ink antialiased;
+    /* A tone-on-tone pixel tree grows in the corner of the desktop, over a faint dither. */
+    background-image:
+      url('/wallpaper.svg'), repeating-conic-gradient(rgb(0 0 0 / 0.05) 0 25%, transparent 0 50%);
+    background-size:
+      min(26rem, 70vw) auto,
+      4px 4px;
+    background-position:
+      right 6% bottom 5rem,
+      0 0;
+    background-repeat: no-repeat, repeat;
+    background-attachment: fixed;
   }
 
-  /* One focus ring for the whole app. Never remove it per-component. */
+  ::selection {
+    @apply bg-accent text-white;
+  }
+
+  /* One focus ring for the whole app: the dotted rectangle. Never remove it per-component. */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-accent-focus;
+    @apply outline-1 outline-offset-2 outline-ink outline-dotted;
+  }
+
+  /* On a button it sits inside the face, as it always did. */
+  button:focus-visible {
+    outline-offset: -5px;
+  }
+
+  input[type='checkbox'] {
+    @apply size-5 shrink-0 appearance-none bg-white;
+    box-shadow: var(--shadow-field);
+  }
+
+  input[type='checkbox']:checked {
+    background: white center / 10.5px no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%231c1b19' d='M6 0h1v1H6zM5 1h2v1H5zM0 2h1v1H0zM4 2h3v1H4zM0 3h2v1H0zM3 3h3v1H3zM0 4h5v1H0zM1 5h3v1H1zM2 6h1v1H2z'/%3E%3C/svg%3E");
+  }
+
+  /* Classic scrollbars in Chromium and Safari: dithered track, raised thumb, arrow buttons. */
+  ::-webkit-scrollbar {
+    width: 20px;
+    height: 20px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-face bg-dither;
+  }
+
+  ::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-button:single-button {
+    @apply bg-face;
+    box-shadow: var(--shadow-raised);
+  }
+
+  ::-webkit-scrollbar-button:single-button {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-position: center;
+    background-size: auto 6px;
+    background-repeat: no-repeat;
+  }
+
+  ::-webkit-scrollbar-button:single-button:active {
+    box-shadow: var(--shadow-pressed);
+  }
+
+  ::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4' shape-rendering='crispEdges'%3E%3Cpath fill='%231c1b19' d='M3 0h1v1H3zM2 1h3v1H2zM1 2h5v1H1zM0 3h7v1H0z'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4' shape-rendering='crispEdges'%3E%3Cpath fill='%231c1b19' d='M0 0h7v1H0zM1 1h5v1H1zM2 2h3v1H2zM3 3h1v1H3z'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar-button:single-button:horizontal {
+    background-size: 6px auto;
+  }
+
+  ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%231c1b19' d='M3 0h1v7H3zM2 1h1v5H2zM1 2h1v3H1zM0 3h1v1H0z'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar-button:single-button:horizontal:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%231c1b19' d='M0 0h1v7H0zM1 1h1v5H1zM2 2h1v3H2zM3 3h1v1H3z'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar-corner {
+    @apply bg-face;
+  }
+
+  /* Firefox has no scrollbar pseudo-elements; give it the colours at least. */
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-color: var(--color-face) var(--color-light);
+    }
   }
 }
