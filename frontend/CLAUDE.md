@@ -95,8 +95,10 @@ backend changes.
 **Styling is Tailwind v4** (via `@tailwindcss/vite`, no `tailwind.config.js` — v4
 configures in CSS). Utility classes in the markup; no CSS modules, no styled components,
 no per-component `.css` files. `src/index.css` is the only stylesheet: the Tailwind
-import plus an `@theme` block of global tokens. Extract a component, not a CSS class,
-when markup repeats.
+import, an `@theme` block of global tokens, one `@utility` (`bg-dither`), and a `base`
+layer that skins what utilities can't reach (checkboxes, scrollbars, the focus ring).
+Extract a component, not a CSS class, when markup repeats. The one font (W95FA) is bundled
+in `src/assets/fonts/` with its licence; nothing loads from a third party.
 
 Tokens live in `@theme` and become utilities automatically — `--color-accent` gives you
 `bg-accent`, `text-accent`, `ring-accent`. Add a token only when a value is genuinely
@@ -152,15 +154,21 @@ endpoint for them.
 
 **Routing & layout.** `App.tsx` declares routes with `react-router-dom`; every route
 nests under one `AppLayout` layout route (`src/layout/AppLayout.tsx`) that renders the
-header/nav once and the page into its `<Outlet />` — a page component never renders its
-own `<header>` or top-level `<main>`. `RequireAuth` gates protected routes and bounces to
-`/login`. An unmatched path renders `NotFoundPage`, not a redirect.
+taskbar (`src/layout/Taskbar.tsx`, the site's `<header>` and nav, docked to the bottom)
+once and the page into its `<Outlet />` — a page component never renders its own
+`<header>` or top-level `<main>`. Each page renders its content inside a `Window`
+(`src/components/Window.tsx`); see `DESIGN.md`. `RequireAuth` gates protected routes and
+bounces to `/login`. An unmatched path renders `NotFoundPage`, not a redirect.
 
 **Components.** Shared, generic primitives (`Button`, `Input`, ...) live in
 `src/components/`. Page components live at the top of `src/` (`NotFoundPage.tsx`) or,
 once a feature has more than one file, in its own folder next to the components/hooks
 only it uses (`src/auth/`, `src/quiz/`). Pull markup into a component the second time it
 repeats, not the first.
+
+**Sound.** `src/sound/` holds the Windows-style sound scheme: `play('name')` for event
+sounds, and `useSystemSounds` (mounted in `AppLayout`) for startup, navigation and error
+sounds. `DESIGN.md` has the table of which sound goes with which event.
 
 **Data loading.** Pages fetch in `useEffect` with a `cancelled` flag in the cleanup (see
 `DiscoverPage`). The `react-hooks` lint rules reject a synchronous `setState` in an
