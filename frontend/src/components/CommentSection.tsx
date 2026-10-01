@@ -3,6 +3,7 @@ import { EditCommentForm } from '../quiz/EditCommentForm';
 import { AddCommentForm } from '../quiz/AddCommentForm';
 import { Link, useLocation } from 'react-router-dom';
 import { CommentActionsMenu } from './CommentActionsMenu';
+import { SectionHeading } from './SectionHeading';
 
 const relativeTime = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 const fullDate = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' });
@@ -58,14 +59,16 @@ export function CommentSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-semibold tracking-tight">
-        Comments {comments.length > 0 && `(${comments.length})`}
-      </h2>
+      <SectionHeading>Comments {comments.length > 0 && `(${comments.length})`}</SectionHeading>
       {canComment ? (
         <AddCommentForm quizId={quizId} onAdded={onAdded} />
       ) : (
-        <p className="text-sm text-muted">
-          <Link to="/login" state={{ from: location.pathname }} className="text-accent">
+        <p className="text-muted">
+          <Link
+            to="/login"
+            state={{ from: location.pathname }}
+            className="text-accent underline underline-offset-2"
+          >
             Sign in
           </Link>{' '}
           to leave a comment.
@@ -73,14 +76,16 @@ export function CommentSection({
       )}
       {comments.length === 0 && <p className="text-muted">No comments yet.</p>}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col divide-y divide-dotted divide-dim bg-white p-1 shadow-field empty:hidden">
         {comments.map((comment) => (
-          <li key={comment.id} className="rounded-card border border-hairline p-4">
-            <div className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+          <li key={comment.id} className="px-3 py-3">
+            <div className="flex items-start justify-between gap-3 text-muted">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="font-semibold text-ink">{comment.authorUsername}</span>
+                <span className="font-bold text-ink">{comment.authorUsername}</span>
                 {comment.authorId === quizOwnerId && (
-                  <span className="rounded-control bg-parchment px-2">Quiz author</span>
+                  <span className="border border-ink bg-tooltip px-1.5 leading-6 text-ink">
+                    Quiz author
+                  </span>
                 )}
                 <time
                   dateTime={comment.createdAt}
@@ -94,7 +99,7 @@ export function CommentSection({
                   </span>
                 )}
               </div>
-              <div className="self-end sm:self-auto">
+              <div className="shrink-0">
                 <CommentActionsMenu
                   canEdit={comment.authorId === currentUserId && editingCommentId !== comment.id}
                   canRemove={comment.authorId === currentUserId || isAdmin}
